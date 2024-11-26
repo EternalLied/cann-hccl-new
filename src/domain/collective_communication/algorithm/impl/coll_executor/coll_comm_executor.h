@@ -68,6 +68,13 @@ public:
         const std::vector<std::pair<bool, std::vector<Slice>>> multRingsUserMemSlice =
         std::vector<std::pair<bool, std::vector<Slice>>> (0));
 
+    HcclResult MultiRingAsymAllGather(const std::string &tag, DeviceMem inputMem, DeviceMem outputMem,
+        const u64 count, const HcclDataType dataType,
+        const std::vector<std::pair<bool, std::vector<Slice>>> multRingsSliceZero, Stream stream,
+        s32 profStage, const u64 baseOffset = 0, const HcomCollOpInfo *opInfo = nullptr,
+        const std::vector<std::pair<bool, std::vector<Slice>>> multRingsUserMemSlice =
+        std::vector<std::pair<bool, std::vector<Slice>>> (0));
+
     HcclResult Level1AllGatherConcurrent(DeviceMem inputMem, DeviceMem outputMem, const u64 count,
         const HcclDataType dataType, Stream stream, s32 profStage,
         std::vector<Slice> &level1DataSegsSlice, u32 syncTrans);
