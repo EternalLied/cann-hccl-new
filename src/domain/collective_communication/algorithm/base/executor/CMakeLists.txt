@@ -40,6 +40,9 @@ set(src_list_pub
     ${CMAKE_CURRENT_SOURCE_DIR}/alltoallv_staged_mesh.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/alltoallv_staged_calculator.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/reduce_scatter_mesh_atomic_opbase.cc
+
+    ${CMAKE_CURRENT_SOURCE_DIR}/all_gather_half_ring.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/all_gather_half_ring_direct.cc
 )
 
 target_sources(hccl_alg PRIVATE
