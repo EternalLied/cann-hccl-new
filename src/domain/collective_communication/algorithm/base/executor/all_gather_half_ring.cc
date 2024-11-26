@@ -143,7 +143,7 @@ HcclResult AllGatherHalfRing::RunAsync(const u32 rank, const u32 rankSize, const
     return HCCL_SUCCESS;
 }
 
-HcclResult AllGatherHalfRing::RunAllGather(u32 rank, u32 rankSize, const std::vector<Slice> &outputSlices, const std::vector<Slice> &outputSlices)
+HcclResult AllGatherHalfRing::RunAllGather(u32 rank, u32 rankSize, const std::vector<Slice> &outputSlices)
 {
     if (outputSlices.size() < rankSize) {
         HCCL_ERROR("[Run][AllGather]rank[%u] OutputSlice Size is less than rank size", rank);
