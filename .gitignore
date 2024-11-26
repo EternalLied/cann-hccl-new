@@ -1,3 +1,8 @@
+docs
+.vscode
+.gitee
+.gitattributes
+
 # Prerequisites
 *.d
 
