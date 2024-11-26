@@ -92,6 +92,9 @@
 #include "all_reduce_hd_optim_pub.h"
 #include "broadcast_oneshot_pub.h"
 
+#include "all_gather_half_ring_pub.h"
+#include "all_gather_half_ring_direct_pub.h"
+
 namespace hccl {
 }
 

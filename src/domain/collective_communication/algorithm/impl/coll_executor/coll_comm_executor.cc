@@ -461,6 +461,171 @@ HcclResult CollCommExecutor::MultiRingAllGatherConcurrent(const std::string &tag
     return HCCL_SUCCESS;
 }
 
+HcclResult CollCommExecutor::MultiRingAsymAllGather(const std::string &tag, DeviceMem inputMem,
+    DeviceMem outputMem, const u64 count, const HcclDataType dataType,
+    const std::vector<std::pair<bool, std::vector<Slice>>> multRingsSliceZero,
+    Stream stream, s32 profStage, const u64 baseOffset, const HcomCollOpInfo *opInfo,
+    const std::vector<std::pair<bool, std::vector<Slice>>> multRingsUserMemSlice)
+{
+    HcclResult ret = HCCL_SUCCESS;
+    u32 ringNum = multRingsSliceZero.size(); // 环数, 当前为4环
+
+    std::vector<std::vector<u32>> ringNics;
+    CHK_RET(GetRingNics(tag, ringNics));
+    auto halfRingSize = ringNum;
+    if (ringNum > RDMA_PLANE_NUM_IN_NPRING_DOUBLE) {
+        halfRingSize = ringNum / 2; // 2环
+    }
+    // 拿到ring环映射关系
+    SubCommInfo outerZeroCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
+    auto nicList = topoAttr_.nicList;
+    std::vector<std::vector<u32>> multiRingsOrder =
+        GetRingsOrderByTopoType(outerZeroCommInfo.localRankSize, topoType_, nicList);
+
+    CHK_RET(ExecutorBase::ExecEmptyTask(inputMem, outputMem, stream, dispatcher_));
+    for (u32 ringIndex = 0; ringIndex < ringNum; ringIndex++) {
+        std::vector<Slice> singleRingSliceZero = multRingsSliceZero[ringIndex].second; // 取出sdma/rdma的数据块
+        CHK_PRT_RET(singleRingSliceZero.empty(), HCCL_ERROR("[CollCommExecutor][MultiRingAllGatherConcurrent]"\
+            "singleRingSliceZero is empty"), HCCL_E_INTERNAL);
+
+        // 910_93场景 生成userMemOut_上对应的slices
+        std::vector<Slice> userMemOutputSlices;
+        if (multRingsUserMemSlice.size() == 0) {
+            CHK_RET(CalUserMemSlices(dataType, opInfo, singleRingSliceZero, ringIndex, multiRingsOrder,
+                userMemOutputSlices));
+        } else {
+            userMemOutputSlices = multRingsUserMemSlice[ringIndex].second;
+        }
+        std::vector<u32> rankOrder;
+        u32 commIndex = ringIndex % halfRingSize;
+        CHK_RET(GetRankOrder(multiRingsOrder, commIndex, rankOrder));
+
+        SubCommInfo outerRingCommInfo = multRingsSliceZero[ringIndex].first ?
+            GetSubCommInfo(COMM_LEVEL0, commIndex) : GetSubCommInfo(COMM_LEVEL0_RDMA, commIndex);
+
+        u32 rankSize = outerRingCommInfo.localRankSize;
+        u32 ringIndexOp = ringIndex;
+
+        // 910_93场景 准备环中的从流
+        std::vector<Stream>       subStreamsInOneRing;
+        std::vector<std::shared_ptr<LocalNotify>> mainSignalsInOneRing;
+        std::vector<std::shared_ptr<LocalNotify>> subSignalsInOneRing;
+        if (opInfo != nullptr) {
+            CHK_RET(GetSubStreamInfoOnOneRing(ringIndex, subStreamsInOneRing, mainSignalsInOneRing,
+                                              subSignalsInOneRing));
+        }
+        bool isSdma = multRingsSliceZero[ringIndex].first;
+        if (ringIndex != (ringNum - 1)) { // 最后一个环是主stream，所以这里减1，符合条件的走从stream
+            if (!topoMatcher_->GetExternalInputHcclEnableFfts() &&
+                workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
+                if (opInfo != nullptr) {
+                    ExecutorType type = isSdma ?
+                        ExecutorType::ALLGATHER_HALF_RING_DIRECT : ExecutorType::ALLGATHER_HALF_RING_DIRECT_RDMA;
+                    algResResp_->threadManage[ringIndex]->Prepare(
+                        outputMem, outputMem, inputMem, count, dataType,
+                        algResResp_->slaveStreams[ringIndex], HcclReduceOp::HCCL_REDUCE_RESERVED, OUTER_BRIDGE_RANK_ID,
+                        singleRingSliceZero, baseOffset, ringNics[ringIndex%halfRingSize], tag, profStage,
+                        outerRingCommInfo, algResResp_->notifiesS2M[ringIndex], algResResp_->notifiesM2S[ringIndex],
+                        ringIndex, type, 0, opInfo, subStreamsInOneRing,
+                        mainSignalsInOneRing, subSignalsInOneRing, rankOrder, userMemOutputSlices);
+                } else {
+                    algResResp_->threadManage[ringIndex]->Prepare(outputMem, outputMem, inputMem, count, dataType,
+                        algResResp_->slaveStreams[ringIndex], HcclReduceOp::HCCL_REDUCE_RESERVED, OUTER_BRIDGE_RANK_ID,
+                        singleRingSliceZero, baseOffset, ringNics[ringIndex%halfRingSize], tag, profStage,
+                        outerRingCommInfo, algResResp_->notifiesS2M[ringIndex], algResResp_->notifiesM2S[ringIndex],
+                        ringIndex, ExecutorType::ALLGATHER_HALF_RING);
+                }
+                algResResp_->threadManage[ringIndex]->NotifyStart();    // 给线程发信号启动处理
+            } else {
+                ret = LocalNotify::Wait(algResResp_->slaveStreams[ringIndex], dispatcher_,
+                    algResResp_->notifiesS2M[ringIndex], profStage);
+                CHK_PRT_RET(ret != HCCL_SUCCESS,
+                    HCCL_ERROR("[CollCommExecutor][MultiRingAllGatherConcurrent]stream[%u] wait failed",
+                    ringIndex), ret);
+                // 如何判断是否环内是否有数据, 以ring的第一个rank的 size为判断依据
+                std::unique_ptr<ExecutorBase> executor;
+                if (opInfo != nullptr) {
+                    executor.reset(new (std::nothrow) AllGatherHalfRingDirect(
+                        dispatcher_, opInfo, topoAttr_.userRank, subStreamsInOneRing, mainSignalsInOneRing,
+                        subSignalsInOneRing, rankOrder, commIndex, userMemOutputSlices, isSdma));
+                } else {
+                    executor.reset(new (std::nothrow) AllGatherHalfRing(dispatcher_, commIndex));
+                }
+                CHK_SMART_PTR_NULL(executor);
+                ret = executor->Prepare(outputMem, outputMem, inputMem, count, dataType,
+                    algResResp_->slaveStreams[ringIndex], HcclReduceOp::HCCL_REDUCE_RESERVED, OUTER_BRIDGE_RANK_ID,
+                    singleRingSliceZero, baseOffset, ringNics[ringIndex%halfRingSize]);
+                CHK_PRT_RET(ret != HCCL_SUCCESS,
+                    HCCL_ERROR("[CollCommExecutor][MultiRingAllGatherConcurrent]stream[%u],all gather(ring) prepare "\
+                    "failed,return[%d]", ringIndex, ret), ret);
+                ret = executor->RegisterProfiler(
+                    ((ringIndexOp + 1) << PROF_RINGINDEX_OFFSET_OF_PLANEID) +
+                    (rankSize << PROF_RANKSIZE_OFFSET_OF_PLANEID) + outerRingCommInfo.localRank,
+                    profStage, HCCL_EXEC_STEP_NOT_SET, algResResp_->slaveStreams[ringIndex]);
+                CHK_PRT_RET(ret != HCCL_SUCCESS,
+                    HCCL_ERROR("[CollCommExecutor][MultiRingAllGatherConcurrent]stream[%u],all gather(ring) register "\
+                    "Profiler failed,return[%d]", ringIndex, ret), ret);
+
+                ret = RunTemplate(executor, outerRingCommInfo);
+                CHK_PRT_RET(ret != HCCL_SUCCESS,
+                    HCCL_ERROR("[CollCommExecutor][MultiRingAllGatherConcurrent]stream[%u],all gather(ring)"\
+                    " run failed,return[%d]", ringIndex, ret), ret);
+
+                ret = LocalNotify::Post(algResResp_->slaveStreams[ringIndex], dispatcher_,
+                    algResResp_->notifiesM2S[ringIndex], profStage);
+                CHK_PRT_RET(ret != HCCL_SUCCESS,
+                    HCCL_ERROR("[CollCommExecutor][MultiRingAllGatherConcurrent]stream[%u] record failed",
+                    ringIndex), ret);
+            }
+
+            ret = LocalNotify::Post(stream, dispatcher_, algResResp_->notifiesS2M[ringIndex], profStage);
+            CHK_PRT_RET(ret != HCCL_SUCCESS,
+                HCCL_ERROR("[CollCommExecutor][MultiRingAllGatherConcurrent]stream[%u] record failed", ringIndex), ret);
+        } else { // 主环
+            std::unique_ptr<ExecutorBase> executor;
+            if (opInfo != nullptr) {
+                executor.reset(new (std::nothrow) AllGatherHalfRingDirect(
+                    dispatcher_, opInfo, topoAttr_.userRank, subStreamsInOneRing, mainSignalsInOneRing,
+                    subSignalsInOneRing, rankOrder, commIndex, userMemOutputSlices, isSdma));
+            } else {
+                executor.reset(new (std::nothrow) AllGatherHalfRing(dispatcher_, commIndex));
+            }
+            CHK_SMART_PTR_NULL(executor);
+            ret = executor->Prepare(outputMem, outputMem, inputMem, count, dataType, stream, HCCL_REDUCE_RESERVED,
+                OUTER_BRIDGE_RANK_ID, singleRingSliceZero, baseOffset, ringNics[ringIndex%halfRingSize]);
+            CHK_PRT_RET(ret != HCCL_SUCCESS,
+                HCCL_ERROR("[CollCommExecutor][MultiRingAllGatherConcurrent]stream[%u],all gather(ring) prepare"\
+                " failed,return[%d]", ringIndex, ret), ret);
+
+            ret = executor->RegisterProfiler(
+                ((ringIndexOp + 1) << PROF_RINGINDEX_OFFSET_OF_PLANEID) +
+                (rankSize << PROF_RANKSIZE_OFFSET_OF_PLANEID) + outerRingCommInfo.localRank,
+                profStage, HCCL_EXEC_STEP_NOT_SET, stream);
+            CHK_PRT_RET(ret != HCCL_SUCCESS,
+                HCCL_ERROR("[CollCommExecutor][MultiRingAllGatherConcurrent]stream[%u],all gather(ring) register "\
+                "Profiler failed, return[%d]", ringIndex, ret), ret);
+
+            ret = RunTemplate(executor, outerRingCommInfo);
+            CHK_PRT_RET(ret != HCCL_SUCCESS,
+                HCCL_ERROR("[CollCommExecutor][MultiRingAllGatherConcurrent]stream[%u],all gather(ring) run failed,"\
+                "return[%d]", ringIndex, ret), ret);
+
+            for (u32 ring = 0; ring < (ringNum - 1); ring++) {
+                if (!topoMatcher_->GetExternalInputHcclEnableFfts() &&
+                    workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
+                    algResResp_->threadManage[ring]->WaitDone(); // 单算子模式，等待线程处理完成信号
+                }
+                ret = LocalNotify::Wait(stream, dispatcher_, algResResp_->notifiesM2S[ring], profStage);
+                CHK_PRT_RET(ret != HCCL_SUCCESS,
+                    HCCL_ERROR("[CollCommExecutor][MultiRingAllGatherConcurrent]stream[%u] wait failed", ring), ret);
+            }
+        }
+    }
+
+    CHK_RET(ExecutorBase::ExecEmptyTask(inputMem, outputMem, stream, dispatcher_));
+    return HCCL_SUCCESS;
+}
+
 HcclResult CollCommExecutor::Level1AllGatherConcurrent(DeviceMem inputMem, DeviceMem outputMem,const u64 count,
     const HcclDataType dataType, Stream stream, s32 profStage,std::vector<Slice> &level1DataSegsSlice, u32 syncTrans)
 {
