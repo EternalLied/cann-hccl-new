@@ -201,44 +201,44 @@ HcclResult AllGatherHalfRingDirect::RunAllGather(const u32 rank, const u32 rankS
 
     std::vector<DeviceMem> finalSrc;
     std::vector<DeviceMem> finalDst;
-    for (u32 step = 0; step < rankSize - 1; step++) {
+    for (u32 step = 0; step < rankSize / 2; step++) {
         std::vector<Slice> rxSliceVector;
         std::vector<Slice> mainSliceVector;
         std::vector<Slice> txSliceVector;
         std::vector<Slice> subSliceVector;
-        // if (step < rankSize / 2 - 1){
+        if (step < rankSize / 2 - 1){
             for (u32 sliceIdx = 0; sliceIdx < sliceSize; sliceIdx++) {
                 rxSliceVector.push_back(slices_[rxSliceIdx * sliceSize + sliceIdx]);
                 mainSliceVector.push_back(userMemOutputSlices_[rxSliceIdx * sliceSize + sliceIdx]);
                 txSliceVector.push_back(slices_[txSliceIdx * sliceSize + sliceIdx]);
                 subSliceVector.push_back(userMemOutputSlices_[txSliceIdx * sliceSize + sliceIdx]);
             }
-        // } else {
-        //     Slice rxTempSlice, mainTempSlice, txTempSlice, subTempSlice;
-        //     for (u32 sliceIdx = 0; sliceIdx < sliceSize; sliceIdx++) {
-        //             u32 rxTempIndex = rxSliceIdx * sliceSize + sliceIdx;
-        //             u32 txTempIndex = txSliceIdx * sliceSize + sliceIdx;
-        //             if (commIndex_ == 0) {
-        //                 rxTempSlice.offset = slices_[rxTempIndex].offset + slices_[rxTempIndex].size / 2;
-        //                 mainTempSlice.offset = userMemOutputSlices_[rxTempIndex].offset + userMemOutputSlices_[rxTempIndex].size / 2;
-        //                 txTempSlice.offset = slices_[txTempIndex].offset + slices_[txTempIndex].size / 2;
-        //                 subTempSlice.offset = userMemOutputSlices_[txTempIndex].offset + userMemOutputSlices_[txTempIndex].size / 2;
-        //             } else {
-        //                 rxTempSlice.offset = slices_[rxTempIndex].offset;
-        //                 mainTempSlice.offset = userMemOutputSlices_[rxTempIndex].offset;
-        //                 txTempSlice.offset = slices_[txTempIndex].offset;
-        //                 subTempSlice.offset = userMemOutputSlices_[txTempIndex].offset;
-        //             }
-        //             rxTempSlice.size = slices_[rxTempIndex].size / 2;
-        //             mainTempSlice.size = userMemOutputSlices_[rxTempIndex].size / 2;
-        //             txTempSlice.size = slices_[txTempIndex].size / 2;
-        //             subTempSlice.size = userMemOutputSlices_[txTempIndex].size / 2;
-        //             rxSliceVector.push_back(rxTempSlice);
-        //             mainSliceVector.push_back(mainTempSlice);
-        //             txSliceVector.push_back(txTempSlice);
-        //             subSliceVector.push_back(subTempSlice);
-        //     }
-        // }
+        } else {
+            Slice rxTempSlice, mainTempSlice, txTempSlice, subTempSlice;
+            for (u32 sliceIdx = 0; sliceIdx < sliceSize; sliceIdx++) {
+                    u32 rxTempIndex = rxSliceIdx * sliceSize + sliceIdx;
+                    u32 txTempIndex = txSliceIdx * sliceSize + sliceIdx;
+                    if (commIndex_ == 0) {
+                        rxTempSlice.offset = slices_[rxTempIndex].offset + slices_[rxTempIndex].size / 2;
+                        mainTempSlice.offset = userMemOutputSlices_[rxTempIndex].offset + userMemOutputSlices_[rxTempIndex].size / 2;
+                        txTempSlice.offset = slices_[txTempIndex].offset + slices_[txTempIndex].size / 2;
+                        subTempSlice.offset = userMemOutputSlices_[txTempIndex].offset + userMemOutputSlices_[txTempIndex].size / 2;
+                    } else {
+                        rxTempSlice.offset = slices_[rxTempIndex].offset;
+                        mainTempSlice.offset = userMemOutputSlices_[rxTempIndex].offset;
+                        txTempSlice.offset = slices_[txTempIndex].offset;
+                        subTempSlice.offset = userMemOutputSlices_[txTempIndex].offset;
+                    }
+                    rxTempSlice.size = slices_[rxTempIndex].size / 2;
+                    mainTempSlice.size = userMemOutputSlices_[rxTempIndex].size / 2;
+                    txTempSlice.size = slices_[txTempIndex].size / 2;
+                    subTempSlice.size = userMemOutputSlices_[txTempIndex].size / 2;
+                    rxSliceVector.push_back(rxTempSlice);
+                    mainSliceVector.push_back(mainTempSlice);
+                    txSliceVector.push_back(txTempSlice);
+                    subSliceVector.push_back(subTempSlice);
+            }
+        }
         // 从流
         if (!isSdma_) {
             CHK_RET(LocalNotify::Post(subStreams_[0], dispatcher_, mainSignals_[0], profilerInput_.stage));
