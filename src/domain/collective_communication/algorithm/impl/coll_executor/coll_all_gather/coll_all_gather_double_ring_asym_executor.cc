@@ -277,38 +277,38 @@ HcclResult CollAllGatherDoubleRingAsymExecutor::KernelRun(const OpParam &param, 
         CHK_RET(PrepareAllgatherSlice(level0RankSize, inputMemSize, dataSegsSlice));
 
         //  多环数据切分
-        multRingsSliceZero = PrepareMultiRingSlice(dataSegsSlice, param.tag, false, topoAttr_.nicList);
-        printf("multRingsSliceZero.size(): %d\n", multRingsSliceZero.size());
-        printf("multRingsSliceZero[0].size(): %d\n", multRingsSliceZero[0].size());
-        for (size_t i = 0; i < multRingsSliceZero.size(); ++i) {
-            std::cout << "Ring " << i << ":\n";
-            for (size_t j = 0; j < multRingsSliceZero[i].size(); ++j) {
-                const Slice& slice = multRingsSliceZero[i][j];
-                std::cout << "  Slice " << j << " - Offset: " << slice.offset << ", Size: " << slice.size << " bytes\n";
-            }
-        }
+        // multRingsSliceZero = PrepareMultiRingSlice(dataSegsSlice, param.tag, false, topoAttr_.nicList);
+        // printf("multRingsSliceZero.size(): %d\n", multRingsSliceZero.size());
+        // printf("multRingsSliceZero[0].size(): %d\n", multRingsSliceZero[0].size());
+        // for (size_t i = 0; i < multRingsSliceZero.size(); ++i) {
+        //     std::cout << "Ring " << i << ":\n";
+        //     for (size_t j = 0; j < multRingsSliceZero[i].size(); ++j) {
+        //         const Slice& slice = multRingsSliceZero[i][j];
+        //         std::cout << "  Slice " << j << " - Offset: " << slice.offset << ", Size: " << slice.size << " bytes\n";
+        //     }
+        // }
 
-        std::vector<std::vector<Slice>> multRingsSameSliceZero;
+        // std::vector<std::vector<Slice>> multRingsSameSliceZero;
         // 双环数据相同
         for (int i = 0; i < 2; ++i) {
-            multRingsSameSliceZero.push_back(dataSegsSlice);
+            multRingsSliceZero.push_back(dataSegsSlice);
         }    
         // 获取第二个环上的数据
-        std::vector<Slice>& secondVector = multRingsSameSliceZero[1];
+        std::vector<Slice>& secondVector = multRingsSliceZero[1];
         // 调整第二个环上的Slice顺序，按照 [0, 7, 6, 5, 4, 3, 2, 1] 的顺序进行调整
         size_t n = secondVector.size();
         for (size_t i = 1; i < n / 2; ++i) {
             std::swap(secondVector[i], secondVector[n - i]);
         }
-        printf("multRingsSameSliceZero.size(): %d\n", multRingsSameSliceZero.size());
-        printf("multRingsSameSliceZero[0].size(): %d\n", multRingsSameSliceZero[0].size());
-        for (size_t i = 0; i < multRingsSameSliceZero.size(); ++i) {
-            std::cout << "Ring " << i << ":\n";
-            for (size_t j = 0; j < multRingsSameSliceZero[i].size(); ++j) {
-                const Slice& slice = multRingsSameSliceZero[i][j];
-                std::cout << "  Slice " << j << " - Offset: " << slice.offset << ", Size: " << slice.size << " bytes\n";
-            }
-        }
+        // printf("multRingsSameSliceZero.size(): %d\n", multRingsSameSliceZero.size());
+        // printf("multRingsSameSliceZero[0].size(): %d\n", multRingsSameSliceZero[0].size());
+        // for (size_t i = 0; i < multRingsSameSliceZero.size(); ++i) {
+        //     std::cout << "Ring " << i << ":\n";
+        //     for (size_t j = 0; j < multRingsSameSliceZero[i].size(); ++j) {
+        //         const Slice& slice = multRingsSameSliceZero[i][j];
+        //         std::cout << "  Slice " << j << " - Offset: " << slice.offset << ", Size: " << slice.size << " bytes\n";
+        //     }
+        // }
 
         std::vector<std::vector<Slice>> multRingsSlice;
 
