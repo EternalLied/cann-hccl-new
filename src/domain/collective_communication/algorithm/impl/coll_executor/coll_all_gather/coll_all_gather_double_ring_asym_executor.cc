@@ -298,7 +298,7 @@ HcclResult CollAllGatherDoubleRingAsymExecutor::KernelRun(const OpParam &param, 
         // 调整第二个环上的Slice顺序，按照 [0, 7, 6, 5, 4, 3, 2, 1] 的顺序进行调整
         size_t n = secondVector.size();
         for (size_t i = 1; i < n / 2; ++i) {
-            std::swap(secondVector[i], secondVector[n - i - 1]);
+            std::swap(secondVector[i], secondVector[n - i]);
         }
         printf("multRingsSameSliceZero.size(): %d\n", multRingsSameSliceZero.size());
         printf("multRingsSameSliceZero[0].size(): %d\n", multRingsSameSliceZero[0].size());
