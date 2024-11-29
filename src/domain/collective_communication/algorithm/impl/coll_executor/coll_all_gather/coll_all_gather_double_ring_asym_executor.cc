@@ -277,15 +277,15 @@ HcclResult CollAllGatherDoubleRingAsymExecutor::KernelRun(const OpParam &param, 
         CHK_RET(PrepareAllgatherSlice(level0RankSize, inputMemSize, dataSegsSlice));
 
         //  多环数据切分
-        multRingsSliceZero = PrepareMultiRingSlice(dataSegsSlice, param.tag, false, topoAttr_.nicList);
-        printf("multRingsSliceZero[0].size(): %d\n", multRingsSliceZero[0].size());
+        // multRingsSliceZero = PrepareMultiRingSlice(dataSegsSlice, param.tag, false, topoAttr_.nicList);
+        // printf("multRingsSliceZero[0].size(): %d\n", multRingsSliceZero[0].size());
 
-        std::vector<std::vector<Slice>> multRingsSameSliceZero;
+        std::vector<std::vector<Slice>> multRingsSliceZero;
         // 双环数据相同
         for (int i = 0; i < 2; ++i) {
-            multRingsSameSliceZero.push_back(dataSegsSlice);
+            multRingsSliceZero.push_back(dataSegsSlice);
         }    
-        printf("multRingsSameSliceZero[0].size(): %d\n", multRingsSameSliceZero[0].size());
+        // printf("multRingsSameSliceZero[0].size(): %d\n", multRingsSliceZero[0].size());
 
         std::vector<std::vector<Slice>> multRingsSlice;
 
