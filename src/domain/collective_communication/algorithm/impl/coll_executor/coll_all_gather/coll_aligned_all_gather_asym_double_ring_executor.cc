@@ -44,7 +44,7 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::DoubleRingAllGather(
     CHK_RET(CollectMultiRingsRankOrder(ringNum, multiRingsOrder, rankOrders));
     // 初始化executor
     std::unique_ptr<ExecutorBase> executor;
-    executor.reset(new (std::nothrow) AlignedAllGatherDoubleRing(dispatcher_,
+    executor.reset(new (std::nothrow) AlignedAllGatherAsymDoubleRing(dispatcher_,
         opInfo, topoAttr_.userRank, algResResp_->slaveStreams, algResResp_->notifiesM2S,
         algResResp_->notifiesS2M, rankOrders, userMemOutputSlicesOfDoubleRing));
     CHK_SMART_PTR_NULL(executor);
