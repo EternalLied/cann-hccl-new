@@ -515,7 +515,7 @@ HcclResult CollCommExecutor::MultiRingAsymAllGather(const std::string &tag, Devi
                                               subSignalsInOneRing));
         }
         bool isSdma = multRingsSliceZero[ringIndex].first;
-        if (ringIndex != (ringNum - 1)) { // 最后一个环是主stream，所以这里减1，符合条件的走从stream
+        if (ringIndex != (ringNum)) { // 最后一个环是主stream，所以这里减1，符合条件的走从stream
             if (!topoMatcher_->GetExternalInputHcclEnableFfts() &&
                 workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
                 if (opInfo != nullptr) {
