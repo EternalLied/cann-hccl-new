@@ -185,7 +185,7 @@ HcclResult AllGatherOperator::SelectAlgfor91093(const OpParam& param, std::strin
     // algName = "AllGatherDoubleRingAsymExecutor";
     // algName = "AllGatherDoubleRingConcurrentExecutor";
     // algName = "AlignedAllGatherDoubleRingFor91093Executor";
-    algName = "AlignedAllGatherAsymDoubleRingExecutor"
+    algName = "AlignedAllGatherAsymDoubleRingExecutor";
     HCCL_INFO("[SelectAlgfor91093] all_gather SelectAlgfor91093 is algName [%s] finally", algName.c_str());
     return HCCL_SUCCESS;
 }
