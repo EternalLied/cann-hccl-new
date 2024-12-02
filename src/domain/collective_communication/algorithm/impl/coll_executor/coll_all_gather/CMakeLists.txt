@@ -11,6 +11,7 @@ set(src_list
   ${CMAKE_CURRENT_SOURCE_DIR}/coll_aligned_all_gather_double_ring_for_910_93_executor.cc
 
   ${CMAKE_CURRENT_SOURCE_DIR}/coll_all_gather_double_ring_asym_executor.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/coll_aligned_all_gather_asym_double_ring_executor.cc
 )
 
 target_sources(hccl_alg PRIVATE
