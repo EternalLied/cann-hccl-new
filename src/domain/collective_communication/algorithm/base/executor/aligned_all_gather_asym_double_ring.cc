@@ -382,7 +382,7 @@ HcclResult AlignedAllGatherAsymDoubleRing::RunAllGather(const u32 rank, const u3
 
     CHK_RET(ExecutorBase::ExecEmptyTask(inputMem_, outputMem_, stream_, dispatcher_));
     CHK_RET(ExecEmptyTasks());
-    for (u32 step = 0; step < rankSize - 1; step++) {
+    for (u32 step = 0; step < rankSize - 2; step++) {
         std::vector<TxMemoryInfo> txMemsSub;
         std::vector<RxMemoryInfo> rxMemsSub;
         std::vector<DeviceMem> localSrcMemsSub;
