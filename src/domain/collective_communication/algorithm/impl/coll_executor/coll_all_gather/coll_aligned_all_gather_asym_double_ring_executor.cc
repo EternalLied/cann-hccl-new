@@ -224,18 +224,18 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::KernelRun(const OpParam &
 
     //  多环数据切分
     if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) {
-        // multRingsSliceZero = PrepareMultiRingSlice(dataSegsSlice, param.tag, false, topoAttr_.nicList);
-        // 双环数据相同
-        for (int i = 0; i < 2; ++i) {
-            multRingsSliceZero.push_back(dataSegsSlice);
-        }    
-        // 获取第二个环上的数据
-        std::vector<Slice>& secondVector = multRingsSliceZero[1];
-        // 调整第二个环上的Slice顺序，按照 [0, 7, 6, 5, 4, 3, 2, 1] 的顺序进行调整
-        size_t n = secondVector.size();
-        for (size_t i = 1; i < n / 2; ++i) {
-            std::swap(secondVector[i], secondVector[n - i]);
-        }
+        multRingsSliceZero = PrepareMultiRingSlice(dataSegsSlice, param.tag, false, topoAttr_.nicList);
+        // // 双环数据相同
+        // for (int i = 0; i < 2; ++i) {
+        //     multRingsSliceZero.push_back(dataSegsSlice);
+        // }    
+        // // 获取第二个环上的数据
+        // std::vector<Slice>& secondVector = multRingsSliceZero[1];
+        // // 调整第二个环上的Slice顺序，按照 [0, 7, 6, 5, 4, 3, 2, 1] 的顺序进行调整
+        // size_t n = secondVector.size();
+        // for (size_t i = 1; i < n / 2; ++i) {
+        //     std::swap(secondVector[i], secondVector[n - i]);
+        // }
     } else {
         multRingsSliceZero.push_back(dataSegsSlice);
     }
