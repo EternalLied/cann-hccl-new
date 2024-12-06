@@ -382,7 +382,7 @@ HcclResult AlignedAllGatherAsymDoubleRing::RunAllGather(const u32 rank, const u3
 
     CHK_RET(ExecutorBase::ExecEmptyTask(inputMem_, outputMem_, stream_, dispatcher_));
     CHK_RET(ExecEmptyTasks());
-    for (u32 step = 0; step < rankSize - 4; step++) {
+    for (u32 step = 0; step < rankSize - 3; step++) {
         std::vector<TxMemoryInfo> txMemsSub;
         std::vector<RxMemoryInfo> rxMemsSub;
         std::vector<DeviceMem> localSrcMemsSub;
@@ -401,6 +401,43 @@ HcclResult AlignedAllGatherAsymDoubleRing::RunAllGather(const u32 rank, const u3
             txSliceIdxMain, rxSliceIdxMain,
             txMemsMain, rxMemsMain,
             localSrcMemsMain, localDstMemsMain));
+
+        if (rank == 0){
+            std::cout << "Rank " << rank << ":\n";
+            std::cout << "Rank " << rank << ":\n";
+            std::cout << "Step " << step << ":\n";
+            std::cout << "Step " << step << ":\n";
+            for (u32 i = 0; i < 2; i++){
+                u32 ringIndex = i;
+                u32 txSliceIdx, rxSliceIdx;
+                u32 sliceSize = multRingsSlices_[ringIndex].size() / rankSize;
+                if (i == 0){
+                    txSliceIdx = rank;
+                    rxSliceIdx = (rank + rankSize - 1) % rankSize;
+                } else {
+                    txSliceIdx = (rankSize - rank) % rankSize;
+                    rxSliceIdx = (rankSize - rank - 1 + rankSize) % rankSize;
+                }
+                std::cout << "ringIndex " << ringIndex << ":\n";
+                std::cout << "txSliceIdx " << txSliceIdx << ":\n";
+                std::cout << "rxSliceIdx " << rxSliceIdx << ":\n";
+                for (u32 sliceIdx = 0; sliceIdx < sliceSize; sliceIdx++) {
+                    const Slice &rxSlice = multRingsSlices_[ringIndex][rxSliceIdx * sliceSize + sliceIdx];
+                    const Slice &mainSlice = userMemOutputSlicesOfDoubleRing_[ringIndex][rxSliceIdx * sliceSize + sliceIdx];
+                    const Slice &txSlice = multRingsSlices_[ringIndex][txSliceIdx * sliceSize + sliceIdx];
+                    const Slice &subSlice = userMemOutputSlicesOfDoubleRing_[ringIndex][txSliceIdx * sliceSize + sliceIdx];
+                    std::cout << "rxSlice " << ":\n";
+                    std::cout << "rxSlice " << " - Offset: " << rxSlice.offset << ", Size: " << rxSlice.size << " bytes\n";
+                    std::cout << "txSlice " << ":\n";
+                    std::cout << "txSlice " << " - Offset: " << txSlice.offset << ", Size: " << txSlice.size << " bytes\n";
+                    // std::cout << "mainSlice " << ":\n";
+                    // std::cout << "mainSlice" << " - Offset: " << mainSlice.offset << ", Size: " << mainSlice.size << " bytes\n";
+                    // std::cout << "subSlice " << ":\n";
+                    // std::cout << "subSlice" << " - Offset: " << mainSlice.offset << ", Size: " << mainSlice.size << " bytes\n";
+                }
+            }
+        }
+
         CHK_RET(RunAllStreams(step, rankSize, txMemsMain, rxMemsMain, txMemsSub, rxMemsSub,
             localSrcMemsMain, localDstMemsMain, localSrcMemsSub, localDstMemsSub));
 
