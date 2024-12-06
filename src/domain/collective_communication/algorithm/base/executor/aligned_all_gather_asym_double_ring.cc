@@ -412,11 +412,11 @@ HcclResult AlignedAllGatherAsymDoubleRing::RunAllGather(const u32 rank, const u3
                 u32 txSliceIdx, rxSliceIdx;
                 u32 sliceSize = multRingsSlices_[ringIndex].size() / rankSize;
                 if (i == 0){
-                    txSliceIdx = rank;
-                    rxSliceIdx = (rank + rankSize - 1) % rankSize;
+                    txSliceIdx = txSliceIdxSub;
+                    rxSliceIdx = rxSliceIdxSub;
                 } else {
-                    txSliceIdx = (rankSize - rank) % rankSize;
-                    rxSliceIdx = (rankSize - rank - 1 + rankSize) % rankSize;
+                    txSliceIdx = txSliceIdxMain;
+                    rxSliceIdx = rxSliceIdxMain;
                 }
                 std::cout << "ringIndex " << ringIndex << ":\n";
                 std::cout << "txSliceIdx " << txSliceIdx << ":\n";
@@ -430,10 +430,10 @@ HcclResult AlignedAllGatherAsymDoubleRing::RunAllGather(const u32 rank, const u3
                     std::cout << "rxSlice " << " - Offset: " << rxSlice.offset << ", Size: " << rxSlice.size << " bytes\n";
                     std::cout << "txSlice " << ":\n";
                     std::cout << "txSlice " << " - Offset: " << txSlice.offset << ", Size: " << txSlice.size << " bytes\n";
-                    // std::cout << "mainSlice " << ":\n";
-                    // std::cout << "mainSlice" << " - Offset: " << mainSlice.offset << ", Size: " << mainSlice.size << " bytes\n";
-                    // std::cout << "subSlice " << ":\n";
-                    // std::cout << "subSlice" << " - Offset: " << mainSlice.offset << ", Size: " << mainSlice.size << " bytes\n";
+                    std::cout << "mainSlice " << ":\n";
+                    std::cout << "mainSlice" << " - Offset: " << mainSlice.offset << ", Size: " << mainSlice.size << " bytes\n";
+                    std::cout << "subSlice " << ":\n";
+                    std::cout << "subSlice" << " - Offset: " << mainSlice.offset << ", Size: " << mainSlice.size << " bytes\n";
                 }
             }
         }
