@@ -14,7 +14,7 @@ namespace hccl {
 CollAlignedAllGatherAsymDoubleRingExecutor::CollAlignedAllGatherAsymDoubleRingExecutor(
     const HcclDispatcher dispatcher,
     std::unique_ptr<TopoMatcher> &topoMatcher)
-    : CollAllGatherRingFor91093Executor(dispatcher, topoMatcher)
+    : CollAlignedAllGatherAsymDoubleRingExecutor(dispatcher, topoMatcher)
 {
     DMAReduceFlag_ = workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE;
 }
@@ -88,12 +88,12 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::RunIntraSeverAllGather(
 
 HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::KernelRun(const OpParam &param, ExecMem &execMem)
 {
-    HCCL_INFO("[CollAllGatherRingFor91093Executor][KernelRun] The AllGatherDoubleRingExecutor starts.");
+    HCCL_INFO("[CollAlignedAllGatherAsymDoubleRingExecutor][KernelRun] The AllGatherDoubleRingExecutor starts.");
     CHK_RET(ActiveSlaveStreams(param.stream));
     u32 perDataSize = 0;
     CHK_RET(SalGetDataTypeSize(param.DataDes.dataType, perDataSize));
     CHK_PRT_RET(perDataSize == 0,
-        HCCL_ERROR("[CollAllGatherRingFor91093Executor][KernelRun]errNo[0x%016llx] datatype[%s] is invalid",
+        HCCL_ERROR("[CollAlignedAllGatherAsymDoubleRingExecutor][KernelRun]errNo[0x%016llx] datatype[%s] is invalid",
             HCCL_ERROR_CODE(HCCL_E_PARA), GetDataTypeEnumStr(param.DataDes.dataType).c_str()), HCCL_E_PARA);
 
     CHK_RET(CheckCommSize(COMM_LEVEL0, COMM_INDEX_0 + 1));
@@ -132,7 +132,7 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::KernelRun(const OpParam &
     if (!DMAReduceFlag_) {
         ret = HcclD2DMemcpyAsync(dispatcher_, dstMem, execMem.inputMem, const_cast<Stream&>(param.stream));
         CHK_PRT_RET(ret != HCCL_SUCCESS,
-            HCCL_ERROR("[CollAllGatherRingFor91093Executor][KernelRun]all gather double "
+            HCCL_ERROR("[CollAlignedAllGatherAsymDoubleRingExecutor][KernelRun]all gather double "
                         "ring memcpy Failed, Offset[%llu], Size[%llu]", dstMemOffset, inputMemSize), ret);
     } else {
         opInfoPtr = &opInfo;
@@ -141,7 +141,7 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::KernelRun(const OpParam &
             DeviceMem srcMem = DeviceMem::create(static_cast<u8 *>(execMem.inputPtr), inputMemSize);
             ret = HcclD2DMemcpyAsync(dispatcher_, dstMem, srcMem, const_cast<Stream&>(param.stream));
             CHK_PRT_RET(ret != HCCL_SUCCESS,
-                HCCL_ERROR("[CollAllGatherRingFor91093Executor][KernelRun]all gather double "
+                HCCL_ERROR("[CollAlignedAllGatherAsymDoubleRingExecutor][KernelRun]all gather double "
                     "ring user memcpy Failed, Offset[%llu], Size[%llu]", dstMemOffset, inputMemSize), ret);
         }
     }
