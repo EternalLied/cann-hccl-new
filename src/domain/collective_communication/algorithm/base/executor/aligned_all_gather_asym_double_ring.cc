@@ -314,10 +314,27 @@ HcclResult AlignedAllGatherAsymDoubleRing::PrepareDeviceMems(
 {
     u32 sliceSize = multRingsSlices_[ringIndex].size() / rankSize;
     for (u32 sliceIdx = 0; sliceIdx < sliceSize; sliceIdx++) {
-        const Slice &rxSlice = multRingsSlices_[ringIndex][rxSliceIdx * sliceSize + sliceIdx];
-        const Slice &mainSlice = userMemOutputSlicesOfDoubleRing_[ringIndex][rxSliceIdx * sliceSize + sliceIdx];
-        const Slice &txSlice = multRingsSlices_[ringIndex][txSliceIdx * sliceSize + sliceIdx];
-        const Slice &subSlice = userMemOutputSlicesOfDoubleRing_[ringIndex][txSliceIdx * sliceSize + sliceIdx];
+        Slice rxSlice = multRingsSlices_[ringIndex][rxSliceIdx * sliceSize + sliceIdx];
+        Slice mainSlice = userMemOutputSlicesOfDoubleRing_[ringIndex][rxSliceIdx * sliceSize + sliceIdx];
+        Slice txSlice = multRingsSlices_[ringIndex][txSliceIdx * sliceSize + sliceIdx];
+        Slice subSlice = userMemOutputSlicesOfDoubleRing_[ringIndex][txSliceIdx * sliceSize + sliceIdx];
+        if (step == rankSize / 2 - 1){
+            if (ringIndex == 0){
+                rxSlice.size = rxSlice.size / 2;
+                mainSlice.size = mainSlice.size / 2;
+                txSlice.size = txSlice.size / 2;
+                subSlice.size = subSlice.size / 2;
+            } else {
+                rxSlice.offset = rxSlice.offset + rxSlice.size / 2;
+                mainSlice.offset = mainSlice.offset + mainSlice.size / 2;
+                txSlice.offset = txSlice.offset + txSlice.size / 2;
+                subSlice.offset = subSlice.offset + subSlice.size / 2;
+                rxSlice.size = rxSlice.size / 2;
+                mainSlice.size = mainSlice.size / 2;
+                txSlice.size = txSlice.size / 2;
+                subSlice.size = subSlice.size / 2;
+            }
+        }
         // PrepareTxRxMems
         DeviceMem src = outputMem_.range(txSlice.offset, txSlice.size);
         HCCL_DEBUG("tx srcMem[%p] range[%llu] size[%llu] ", src.ptr(),
@@ -325,7 +342,8 @@ HcclResult AlignedAllGatherAsymDoubleRing::PrepareDeviceMems(
         txMems.emplace_back(TxMemoryInfo{UserMemType::OUTPUT_MEM, txSlice.offset + baseOffset_,
             src.ptr(), txSlice.size});
         DeviceMem dst;
-        if (step == rankSize - DMA_REDUCE_TWO_OFFSET) {
+        u32 DMA_REDUCE_ASYM_OFFSET = 5;
+        if (step == rankSize - DMA_REDUCE_ASYM_OFFSET) {
             HCCL_DEBUG(
             "DMAReduce(sdma) MemcpyAsync operation: step[%u] stream[main], dst rank[%u] starts to rcv "
             "offset[%llu] size[%llu] at userMemOutput_",
@@ -383,7 +401,8 @@ HcclResult AlignedAllGatherAsymDoubleRing::RunAllGather(const u32 rank, const u3
 
     CHK_RET(ExecutorBase::ExecEmptyTask(inputMem_, outputMem_, stream_, dispatcher_));
     CHK_RET(ExecEmptyTasks());
-    for (u32 step = 0; step < rankSize - 3; step++) {
+    std::cout << "rankSize / 2: " << rankSize / 2 << ":\n";
+    for (u32 step = 0; step < rankSize / 2; step++) {
         std::vector<TxMemoryInfo> txMemsSub;
         std::vector<RxMemoryInfo> rxMemsSub;
         std::vector<DeviceMem> localSrcMemsSub;
@@ -403,41 +422,41 @@ HcclResult AlignedAllGatherAsymDoubleRing::RunAllGather(const u32 rank, const u3
             txMemsMain, rxMemsMain,
             localSrcMemsMain, localDstMemsMain));
 
-        if (rank == 0){
-            std::cout << "Rank " << rank << ":\n";
-            std::cout << "Rank " << rank << ":\n";
-            std::cout << "Step " << step << ":\n";
-            std::cout << "Step " << step << ":\n";
-            for (u32 i = 0; i < 2; i++){
-                u32 ringIndex = i;
-                u32 txSliceIdx, rxSliceIdx;
-                u32 sliceSize = multRingsSlices_[ringIndex].size() / rankSize;
-                if (i == 0){
-                    txSliceIdx = txSliceIdxSub;
-                    rxSliceIdx = rxSliceIdxSub;
-                } else {
-                    txSliceIdx = txSliceIdxMain;
-                    rxSliceIdx = rxSliceIdxMain;
-                }
-                std::cout << "ringIndex " << ringIndex << ":\n";
-                std::cout << "txSliceIdx " << txSliceIdx << ":\n";
-                std::cout << "rxSliceIdx " << rxSliceIdx << ":\n";
-                for (u32 sliceIdx = 0; sliceIdx < sliceSize; sliceIdx++) {
-                    const Slice &rxSlice = multRingsSlices_[ringIndex][rxSliceIdx * sliceSize + sliceIdx];
-                    const Slice &mainSlice = userMemOutputSlicesOfDoubleRing_[ringIndex][rxSliceIdx * sliceSize + sliceIdx];
-                    const Slice &txSlice = multRingsSlices_[ringIndex][txSliceIdx * sliceSize + sliceIdx];
-                    const Slice &subSlice = userMemOutputSlicesOfDoubleRing_[ringIndex][txSliceIdx * sliceSize + sliceIdx];
-                    std::cout << "rxSlice " << ":\n";
-                    std::cout << "rxSlice " << " - Offset: " << rxSlice.offset << ", Size: " << rxSlice.size << " bytes\n";
-                    std::cout << "txSlice " << ":\n";
-                    std::cout << "txSlice " << " - Offset: " << txSlice.offset << ", Size: " << txSlice.size << " bytes\n";
-                    std::cout << "mainSlice " << ":\n";
-                    std::cout << "mainSlice" << " - Offset: " << mainSlice.offset << ", Size: " << mainSlice.size << " bytes\n";
-                    std::cout << "subSlice " << ":\n";
-                    std::cout << "subSlice" << " - Offset: " << mainSlice.offset << ", Size: " << mainSlice.size << " bytes\n";
-                }
-            }
-        }
+        // if (rank == 0){
+        //     std::cout << "Rank " << rank << ":\n";
+        //     std::cout << "Rank " << rank << ":\n";
+        //     std::cout << "Step " << step << ":\n";
+        //     std::cout << "Step " << step << ":\n";
+        //     for (u32 i = 0; i < 2; i++){
+        //         u32 ringIndex = i;
+        //         u32 txSliceIdx, rxSliceIdx;
+        //         u32 sliceSize = multRingsSlices_[ringIndex].size() / rankSize;
+        //         if (i == 0){
+        //             txSliceIdx = txSliceIdxSub;
+        //             rxSliceIdx = rxSliceIdxSub;
+        //         } else {
+        //             txSliceIdx = txSliceIdxMain;
+        //             rxSliceIdx = rxSliceIdxMain;
+        //         }
+        //         std::cout << "ringIndex " << ringIndex << ":\n";
+        //         std::cout << "txSliceIdx " << txSliceIdx << ":\n";
+        //         std::cout << "rxSliceIdx " << rxSliceIdx << ":\n";
+        //         for (u32 sliceIdx = 0; sliceIdx < sliceSize; sliceIdx++) {
+        //             const Slice &rxSlice = multRingsSlices_[ringIndex][rxSliceIdx * sliceSize + sliceIdx];
+        //             const Slice &mainSlice = userMemOutputSlicesOfDoubleRing_[ringIndex][rxSliceIdx * sliceSize + sliceIdx];
+        //             const Slice &txSlice = multRingsSlices_[ringIndex][txSliceIdx * sliceSize + sliceIdx];
+        //             const Slice &subSlice = userMemOutputSlicesOfDoubleRing_[ringIndex][txSliceIdx * sliceSize + sliceIdx];
+        //             std::cout << "rxSlice " << ":\n";
+        //             std::cout << "rxSlice " << " - Offset: " << rxSlice.offset << ", Size: " << rxSlice.size << " bytes\n";
+        //             std::cout << "txSlice " << ":\n";
+        //             std::cout << "txSlice " << " - Offset: " << txSlice.offset << ", Size: " << txSlice.size << " bytes\n";
+        //             std::cout << "mainSlice " << ":\n";
+        //             std::cout << "mainSlice" << " - Offset: " << mainSlice.offset << ", Size: " << mainSlice.size << " bytes\n";
+        //             std::cout << "subSlice " << ":\n";
+        //             std::cout << "subSlice" << " - Offset: " << mainSlice.offset << ", Size: " << mainSlice.size << " bytes\n";
+        //         }
+        //     }
+        // }
 
         CHK_RET(RunAllStreams(step, rankSize, txMemsMain, rxMemsMain, txMemsSub, rxMemsSub,
             localSrcMemsMain, localDstMemsMain, localSrcMemsSub, localDstMemsSub));
