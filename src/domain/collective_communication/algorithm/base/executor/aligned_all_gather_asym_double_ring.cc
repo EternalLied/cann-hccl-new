@@ -172,6 +172,7 @@ HcclResult AlignedAllGatherAsymDoubleRing::RunInitStep(const u32 rank, const u32
 {
     // for (u32 ringIndex = 0; ringIndex < multRingsSlices_.size(); ringIndex++) {
         // 第一步搬到userMemIn_的offset, 不同的ring环offset不一样
+        u32 ringIndex = 0;
         auto firstStepOffset = multRingsSlices_[ringIndex][ringsOrders_[ringIndex][0]].offset;
         // 第-1步，片内将部分数据从userIn搬到cclIn
         DeviceMem srcInit;
