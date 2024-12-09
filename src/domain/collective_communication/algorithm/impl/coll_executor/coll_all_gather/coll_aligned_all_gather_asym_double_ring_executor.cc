@@ -14,7 +14,7 @@ namespace hccl {
 CollAlignedAllGatherAsymDoubleRingExecutor::CollAlignedAllGatherAsymDoubleRingExecutor(
     const HcclDispatcher dispatcher,
     std::unique_ptr<TopoMatcher> &topoMatcher)
-    : CollAlignedAllGatherAsymDoubleRingExecutor(dispatcher, topoMatcher)
+    : CollAllGatherRingFor91093Executor(dispatcher, topoMatcher)
 {
     DMAReduceFlag_ = workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE;
 }
