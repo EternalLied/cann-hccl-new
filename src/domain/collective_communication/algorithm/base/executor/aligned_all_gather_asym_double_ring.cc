@@ -318,23 +318,23 @@ HcclResult AlignedAllGatherAsymDoubleRing::PrepareDeviceMems(
         Slice mainSlice = userMemOutputSlicesOfDoubleRing_[ringIndex][rxSliceIdx * sliceSize + sliceIdx];
         Slice txSlice = multRingsSlices_[ringIndex][txSliceIdx * sliceSize + sliceIdx];
         Slice subSlice = userMemOutputSlicesOfDoubleRing_[ringIndex][txSliceIdx * sliceSize + sliceIdx];
-        if (step == rankSize / 2 - 1){
-            if (ringIndex == 0){
-                rxSlice.size = rxSlice.size / 2;
-                mainSlice.size = mainSlice.size / 2;
-                txSlice.size = txSlice.size / 2;
-                subSlice.size = subSlice.size / 2;
-            } else {
-                rxSlice.offset = rxSlice.offset + rxSlice.size / 2;
-                mainSlice.offset = mainSlice.offset + mainSlice.size / 2;
-                txSlice.offset = txSlice.offset + txSlice.size / 2;
-                subSlice.offset = subSlice.offset + subSlice.size / 2;
-                rxSlice.size = rxSlice.size / 2;
-                mainSlice.size = mainSlice.size / 2;
-                txSlice.size = txSlice.size / 2;
-                subSlice.size = subSlice.size / 2;
-            }
-        }
+        // if (step == rankSize / 2 - 1){
+        //     if (ringIndex == 0){
+        //         rxSlice.size = rxSlice.size / 2;
+        //         mainSlice.size = mainSlice.size / 2;
+        //         txSlice.size = txSlice.size / 2;
+        //         subSlice.size = subSlice.size / 2;
+        //     } else {
+        //         rxSlice.offset = rxSlice.offset + rxSlice.size / 2;
+        //         mainSlice.offset = mainSlice.offset + mainSlice.size / 2;
+        //         txSlice.offset = txSlice.offset + txSlice.size / 2;
+        //         subSlice.offset = subSlice.offset + subSlice.size / 2;
+        //         rxSlice.size = rxSlice.size / 2;
+        //         mainSlice.size = mainSlice.size / 2;
+        //         txSlice.size = txSlice.size / 2;
+        //         subSlice.size = subSlice.size / 2;
+        //     }
+        // }
         // PrepareTxRxMems
         DeviceMem src = outputMem_.range(txSlice.offset, txSlice.size);
         HCCL_DEBUG("tx srcMem[%p] range[%llu] size[%llu] ", src.ptr(),
