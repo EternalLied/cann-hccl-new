@@ -237,6 +237,8 @@ HcclResult AllGatherHalfRingDirect::RunAllGather(const u32 rank, const u32 rankS
                     mainSliceVector.push_back(mainTempSlice);
                     // txSliceVector.push_back(txTempSlice);
                     // subSliceVector.push_back(subTempSlice);
+                    txSliceVector.push_back(slices_[txSliceIdx * sliceSize + sliceIdx]);
+                    subSliceVector.push_back(userMemOutputSlices_[txSliceIdx * sliceSize + sliceIdx]);
             }
         }
         // 从流
