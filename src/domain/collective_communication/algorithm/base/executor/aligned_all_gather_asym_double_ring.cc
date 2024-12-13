@@ -322,17 +322,17 @@ HcclResult AlignedAllGatherAsymDoubleRing::PrepareDeviceMems(
             if (ringIndex == 0){
                 rxSlice.size = rxSlice.size / 2;
                 mainSlice.size = mainSlice.size / 2;
-                txSlice.size = txSlice.size / 2;
-                subSlice.size = subSlice.size / 2;
+                // txSlice.size = txSlice.size / 2;
+                // subSlice.size = subSlice.size / 2;
             } else {
                 rxSlice.offset = rxSlice.offset + rxSlice.size / 2;
                 mainSlice.offset = mainSlice.offset + mainSlice.size / 2;
-                txSlice.offset = txSlice.offset + txSlice.size / 2;
-                subSlice.offset = subSlice.offset + subSlice.size / 2;
+                // txSlice.offset = txSlice.offset + txSlice.size / 2;
+                // subSlice.offset = subSlice.offset + subSlice.size / 2;
                 rxSlice.size = rxSlice.size / 2;
                 mainSlice.size = mainSlice.size / 2;
-                txSlice.size = txSlice.size / 2;
-                subSlice.size = subSlice.size / 2;
+                // txSlice.size = txSlice.size / 2;
+                // subSlice.size = subSlice.size / 2;
             }
         }
         // PrepareTxRxMems
