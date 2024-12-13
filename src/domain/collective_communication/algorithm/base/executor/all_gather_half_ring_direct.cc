@@ -219,24 +219,26 @@ HcclResult AllGatherHalfRingDirect::RunAllGather(const u32 rank, const u32 rankS
                     u32 rxTempIndex = rxSliceIdx * sliceSize + sliceIdx;
                     u32 txTempIndex = txSliceIdx * sliceSize + sliceIdx;
                     if (commIndex_ == 0) {
-                        rxTempSlice.offset = slices_[rxTempIndex].offset + slices_[rxTempIndex].size / 2;
-                        mainTempSlice.offset = userMemOutputSlices_[rxTempIndex].offset + userMemOutputSlices_[rxTempIndex].size / 2;
+                        // rxTempSlice.offset = slices_[rxTempIndex].offset + slices_[rxTempIndex].size / 2;
+                        // mainTempSlice.offset = userMemOutputSlices_[rxTempIndex].offset + userMemOutputSlices_[rxTempIndex].size / 2;
                         // txTempSlice.offset = slices_[txTempIndex].offset + slices_[txTempIndex].size / 2;
                         // subTempSlice.offset = userMemOutputSlices_[txTempIndex].offset + userMemOutputSlices_[txTempIndex].size / 2;
                     } else {
-                        rxTempSlice.offset = slices_[rxTempIndex].offset;
-                        mainTempSlice.offset = userMemOutputSlices_[rxTempIndex].offset;
+                        // rxTempSlice.offset = slices_[rxTempIndex].offset;
+                        // mainTempSlice.offset = userMemOutputSlices_[rxTempIndex].offset;
                         // txTempSlice.offset = slices_[txTempIndex].offset;
                         // subTempSlice.offset = userMemOutputSlices_[txTempIndex].offset;
                     }
-                    rxTempSlice.size = slices_[rxTempIndex].size / 2;
-                    mainTempSlice.size = userMemOutputSlices_[rxTempIndex].size / 2;
+                    // rxTempSlice.size = slices_[rxTempIndex].size / 2;
+                    // mainTempSlice.size = userMemOutputSlices_[rxTempIndex].size / 2;
                     // txTempSlice.size = slices_[txTempIndex].size / 2;
                     // subTempSlice.size = userMemOutputSlices_[txTempIndex].size / 2;
-                    rxSliceVector.push_back(rxTempSlice);
-                    mainSliceVector.push_back(mainTempSlice);
+                    // rxSliceVector.push_back(rxTempSlice);
+                    // mainSliceVector.push_back(mainTempSlice);
                     // txSliceVector.push_back(txTempSlice);
                     // subSliceVector.push_back(subTempSlice);
+                    rxSliceVector.push_back(slices_[rxSliceIdx * sliceSize + sliceIdx]);
+                    mainSliceVector.push_back(userMemOutputSlices_[rxSliceIdx * sliceSize + sliceIdx]);
                     txSliceVector.push_back(slices_[txSliceIdx * sliceSize + sliceIdx]);
                     subSliceVector.push_back(userMemOutputSlices_[txSliceIdx * sliceSize + sliceIdx]);
             }
