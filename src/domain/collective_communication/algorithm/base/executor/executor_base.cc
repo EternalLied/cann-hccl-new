@@ -37,6 +37,7 @@ HcclResult ExecutorBase::Prepare(DeviceMem &inputMem, DeviceMem &outputMem, Devi
     // 部分集合通信操作允许input_mem/output_mem为空
 
     HCCL_DEBUG("ExecutorBase prepare start");
+    std::cout << "ExecutorBase prepare start" << '\n';
 
     /* * 参数保存 */
     inputMem_ = inputMem;
