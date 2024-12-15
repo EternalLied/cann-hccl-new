@@ -552,6 +552,8 @@ HcclResult CollCommExecutor::MultiRingAsymAllGather(const std::string &tag, Devi
                     executor.reset(new (std::nothrow) AllGatherHalfRing(dispatcher_, commIndex));
                 }
                 CHK_SMART_PTR_NULL(executor);
+
+                std::cout << "ready to prepre in sub ring" << '\n';
                 ret = executor->Prepare(outputMem, outputMem, inputMem, count, dataType,
                     algResResp_->slaveStreams[ringIndex], HcclReduceOp::HCCL_REDUCE_RESERVED, OUTER_BRIDGE_RANK_ID,
                     singleRingSliceZero, baseOffset, ringNics[ringIndex%halfRingSize]);
@@ -591,6 +593,8 @@ HcclResult CollCommExecutor::MultiRingAsymAllGather(const std::string &tag, Devi
                 executor.reset(new (std::nothrow) AllGatherHalfRing(dispatcher_, commIndex));
             }
             CHK_SMART_PTR_NULL(executor);
+
+            std::cout << "ready to prepre in main ring" << '\n';
             ret = executor->Prepare(outputMem, outputMem, inputMem, count, dataType, stream, HCCL_REDUCE_RESERVED,
                 OUTER_BRIDGE_RANK_ID, singleRingSliceZero, baseOffset, ringNics[ringIndex%halfRingSize]);
             CHK_PRT_RET(ret != HCCL_SUCCESS,
