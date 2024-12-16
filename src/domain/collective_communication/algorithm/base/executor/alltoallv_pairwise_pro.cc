@@ -237,6 +237,9 @@ HcclResult AlltoAllVPairWisePro::RunZCopyAlltoAll(const u32 rank, const u32 rank
     for (u32 i = 1; i < rankSize - 1; i++) {
 
         if(i == 1){
+            u32 prevRank_s;
+            u32 nextRank_s;
+
             // SIO对端
             if (rank % 2 == 0){
                 u32 prevRank_s = rank + 1;
@@ -311,16 +314,18 @@ HcclResult AlltoAllVPairWisePro::RunZCopyAlltoAll(const u32 rank, const u32 rank
 
             HCCL_DEBUG("[AlltoAllVPairWisePro][RunZCopyAlltoAll]: sendBytes_h[%llu] recvBytes_h[%llu] sendDispBytes_h[%llu]" \
             " dstOffset_h[%llu]", sendBytes_h, recvBytes_h, sendDispBytes_h, dstOffset_h);
-            HcclResult ret = SendRecv(txMemoryInfo_h, rxMemoryInfo_h, prevTransport, nextTransport);
-            CHK_PRT_RET(ret != HCCL_SUCCESS,
+            HcclResult ret_h = SendRecv(txMemoryInfo_h, rxMemoryInfo_h, prev_s_Transport, next_s_Transport);
+            CHK_PRT_RET(ret_h != HCCL_SUCCESS,
             HCCL_ERROR("[AlltoAllVPairWisePro][RunZCopyAlltoAll]errNo[0x%016llx] "\
             "sendBytes_h[%llu] recvBytes_h[%llu] sendAddr_h[%p] dstOffset_h[%llu]",
-            HCCL_ERROR_CODE(ret), sendBytes_h, recvBytes_h, sendAddr_h, dstOffset_h),
-            ret);       
+            HCCL_ERROR_CODE(ret_h), sendBytes_h, recvBytes_h, sendAddr_h, dstOffset_h),
+            ret_h);       
 
         }
         else{
             //最后一跳对端选择 
+            u32 prevRank;
+            u32 nextRank;
             if (i == rankSize - 2){
                 if (rank % 2 == 0){
                     u32 prevRank = (rank - 1) % rankSize;
