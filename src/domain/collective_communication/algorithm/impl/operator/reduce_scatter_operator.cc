@@ -193,7 +193,8 @@ HcclResult ReduceScatterOperator::SelectAlgfor91093(const OpParam& param, std::s
                 HcclAlgoType::HCCL_ALGO_TYPE_FAST_DOUBLE_RING) {
                 algName = "ReduceScatterFastDoubleRingFor91093Executor";
             } else {
-                algName = "AlignedReduceScatterDoubleRingFor91093Executor";
+                // algName = "AlignedReduceScatterDoubleRingFor91093Executor";
+                algName = "AlignedReduceScatterAsymDoubleRingExecutor";
             }
         }
     } else {
