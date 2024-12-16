@@ -137,6 +137,22 @@ HcclResult CollReduceScatterRingFor91093Executor::KernelRun(const OpParam &param
     multiStreamSlice = ReduceScatterRingSlicePrepare(ringNum, sliceNum, useInlineRduce, execMem.outputMem,
         dataSegsSlice, param.tag);
 
+    printf("dataSegsSlice.size(): %d\n", dataSegsSlice.size());
+    for (size_t i = 0; i < dataSegsSlice.size(); ++i) {
+            const Slice& slice = dataSegsSlice[i];
+            std::cout << "  Slice " << i << " - Offset: " << slice.offset << ", Size: " << slice.size << " bytes\n";
+    }
+
+    printf("multiStreamSlice.size(): %d\n", multiStreamSlice.size());
+    printf("multiStreamSlice[0].size(): %d\n", multiStreamSlice[0].size());
+    for (size_t i = 0; i < multiStreamSlice.size(); ++i) {
+        std::cout << "Stream " << i << ":\n";
+        for (size_t j = 0; j < multiStreamSlice[i].size(); ++j) {
+            const Slice& slice = multiStreamSlice[i][j];
+            std::cout << "  Slice " << j << " - Offset: " << slice.offset << ", Size: " << slice.size << " bytes\n";
+        }
+    }
+
     CalLevel0DataSegsSlice(execMem, multiStreamSlice, sliceNum, innerRankSize, level2RankSize, level0DataSegsSlice);
 
     std::vector<std::vector<Slice>> multRingsUserMemSlice;
