@@ -44,6 +44,7 @@ set(src_list_pub
     ${CMAKE_CURRENT_SOURCE_DIR}/all_gather_half_ring.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/all_gather_half_ring_direct.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/aligned_all_gather_asym_double_ring.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/aligned_reduce_scatter_asym_double_ring.cc
 )
 
 target_sources(hccl_alg PRIVATE
