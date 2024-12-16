@@ -405,6 +405,18 @@ HcclResult CollAlltoAllExecutor::RunAlltoAllTemplate(const std::unique_ptr<Allto
     return HCCL_SUCCESS;
 }
 
+HcclResult CollAlltoAllExecutor::RunAlltoAllProTemplate(const std::unique_ptr<AlltoAllVPairWisePro> &executor,
+    const SubCommInfo &commInfo)
+{
+    HcclResult ret = executor->RunAsync(commInfo.localRank, commInfo.localRankSize, commInfo.links);
+    CHK_PRT_RET(ret == HCCL_E_AGAIN, HCCL_WARNING("[CollAlltoAllProExecutor][RunAlltoAllProTemplate]" \
+        "group has been destroyed. Break!"), ret);
+    CHK_PRT_RET(ret != HCCL_SUCCESS,
+        HCCL_ERROR("[CollAlltoAllProExecutor][RunAlltoAllProTemplate]run executor rank[%u] rank size[%u] failed",
+        commInfo.localRank, commInfo.localRankSize), ret);
+    return HCCL_SUCCESS;
+}
+
 HcclResult CollAlltoAllExecutor::RunAlltoAllVTemplateStaged(const std::unique_ptr<AlltoAllVStagedBase> &executor,
     const SubCommInfo &commInfo)
 {

@@ -37,6 +37,9 @@ public:
     static HcclResult RunTemplateWithVirtualLink(const std::unique_ptr<AlltoAllVStagedBase> &executor,
         const SubCommInfo &commInfo);
 
+    static HcclResult RunAlltoAllProTemplate(const std::unique_ptr<AlltoAllVPairWisePro> &executor,
+        const SubCommInfo &commInfo);
+
 protected:
     /* *************** 算法编排 *************** */
     // 公共接口
