@@ -37,7 +37,7 @@ HcclResult ExecutorBase::Prepare(DeviceMem &inputMem, DeviceMem &outputMem, Devi
     // 部分集合通信操作允许input_mem/output_mem为空
 
     HCCL_DEBUG("ExecutorBase prepare start");
-    std::cout << "ExecutorBase prepare start" << '\n';
+    // std::cout << "ExecutorBase prepare start" << '\n';
 
     /* * 参数保存 */
     inputMem_ = inputMem;
@@ -59,12 +59,12 @@ HcclResult ExecutorBase::Prepare(DeviceMem &inputMem, DeviceMem &outputMem, Devi
         slices_ = slices;
     }
 
-    for (uint32_t rank : nicRankList) {
-        std::cout << rank << std::endl;
-    }
-    std::cout << "ready to assign nicRankList_" << '\n';
+    // for (uint32_t rank : nicRankList) {
+    //     std::cout << rank << std::endl;
+    // }
+    // std::cout << "ready to assign nicRankList_" << '\n';
     nicRankList_.assign(nicRankList.begin(), nicRankList.end());
-    std::cout << "ExecutorBase prepare end" << '\n';
+    // std::cout << "ExecutorBase prepare end" << '\n';
 
     // 不带入该参数，代表数据均分，直接用count赋值
     HCCL_DEBUG("ExecutorBase prepare end");
