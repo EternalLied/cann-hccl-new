@@ -291,7 +291,7 @@ HcclResult AlltoAllVPairWisePro::RunZCopyAlltoAll(const u32 rank, const u32 rank
 
             HCCL_DEBUG("[AlltoAllVPairWisePro][RunZCopyAlltoAll]: sendBytes_s[%llu] recvBytes_s[%llu] sendDispBytes_s[%llu]" \
             " dstOffset_s[%llu]", sendBytes_s, recvBytes_s, sendDispBytes_s, dstOffset_s);
-            HcclResult ret = SendRecv(txMemoryInfo_s, rxMemoryInfo_s, prevTransport, nextTransport);
+            HcclResult ret = SendRecv(txMemoryInfo_s, rxMemoryInfo_s, prev_s_Transport, next_s_Transport);
             CHK_PRT_RET(ret != HCCL_SUCCESS,
             HCCL_ERROR("[AlltoAllVPairWisePro][RunZCopyAlltoAll]errNo[0x%016llx] "\
             "sendBytes_s[%llu] recvBytes_s[%llu] sendAddr_s[%p] dstOffset_s[%llu]",
