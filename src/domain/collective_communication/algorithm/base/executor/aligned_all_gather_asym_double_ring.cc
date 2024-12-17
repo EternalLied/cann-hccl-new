@@ -342,7 +342,7 @@ HcclResult AlignedAllGatherAsymDoubleRing::PrepareDeviceMems(
         txMems.emplace_back(TxMemoryInfo{UserMemType::OUTPUT_MEM, txSlice.offset + baseOffset_,
             src.ptr(), txSlice.size});
         DeviceMem dst;
-        u32 DMA_REDUCE_ASYM_OFFSET = 5;
+        u32 DMA_REDUCE_ASYM_OFFSET = rankSize / 2 + 1;
         if (step == rankSize - DMA_REDUCE_ASYM_OFFSET) {
             HCCL_DEBUG(
             "DMAReduce(sdma) MemcpyAsync operation: step[%u] stream[main], dst rank[%u] starts to rcv "
