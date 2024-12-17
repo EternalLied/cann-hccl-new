@@ -44,6 +44,8 @@ constexpr u64 DOUBLE_RING_NUM = 2;
 constexpr u64 DOUBLE_RING_STREAM_NUM = 3;
 constexpr u32 ALIGNED_SUB_RING_INDEX = 0;
 constexpr u32 ALIGNED_MAIN_RING_INDEX = 1;
+constexpr u64 HCCL_SDMA_RDMA_SPLIT_SIZE = 67108864;
+constexpr u32 HCCL_SPLIT_FLAG = 2;
 
 // AnyPath相关，SDMA数据量切分比例
 constexpr u32 MAX_SPLIT_VALUE = 100;
