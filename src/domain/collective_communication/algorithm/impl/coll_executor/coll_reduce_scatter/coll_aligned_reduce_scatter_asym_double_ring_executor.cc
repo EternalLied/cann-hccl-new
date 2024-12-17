@@ -93,7 +93,7 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::RunIntraSeverReduceSc
     return HCCL_SUCCESS;
 }
 
-HcclResult CollReduceScatterRingFor91093Executor::KernelRun(const OpParam &param, ExecMem &execMem)
+HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::KernelRun(const OpParam &param, ExecMem &execMem)
 {
     HCCL_INFO("[CollReduceScatterRingFor91093Executor][KernelRun] The ReduceScatterDoubleRingExecutor starts.");
     u32 perDataSize = 0;
