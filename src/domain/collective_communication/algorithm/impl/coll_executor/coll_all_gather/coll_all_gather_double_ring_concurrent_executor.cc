@@ -101,13 +101,7 @@ u64 CollAllGatherDoubleRingConcurrentExecutor::CalcLoopMaxCount(const u64 cclBuf
 
 bool CollAllGatherDoubleRingConcurrentExecutor::IsDataSplitForRdmaSdmaConcurrent(const u64 curSize)
 {
-    u32 dataSplit = 0;
-    u64 dataValue = curSize * topoAttr_.userRankSize;
-    if ((topoAttr_.serverNum > 1) && ((dataValue / topoAttr_.serverNum) <= HCCL_SDMA_RDMA_SPLIT_SIZE)) {
-        dataSplit = 1;
-    } else if (dataValue <= HCCL_SDMA_RDMA_SPLIT_SIZE) {
-        dataSplit = HCCL_SPLIT_FLAG;
-    }
+    bool dataSplit = (curSize >= HCCL_SPLIT_SIZE_INTER_SERVER);
     return dataSplit;
 }
 
@@ -170,7 +164,7 @@ HcclResult CollAllGatherDoubleRingConcurrentExecutor::KernelRun(const OpParam &p
                     baseOffset + outerOffset, inputMemSize), ret);
         }
     }
-    if (topoAttr_.devNumInLevel2 > 1) {
+    if (topoAttr_.superPodNum > 1) {
         // 超节点间做allgather
         ret = AllGatherLevel2(param.tag, execMem.inputMem, execMem.outputMem, execMem.count, param.DataDes.dataType,
             const_cast<Stream&>(param.stream), opInfoPtr);
