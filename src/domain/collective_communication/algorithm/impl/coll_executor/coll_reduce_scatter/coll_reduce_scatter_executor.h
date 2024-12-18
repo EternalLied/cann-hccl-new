@@ -35,6 +35,9 @@ protected:
     std::vector<std::vector<Slice>> ReduceScatterRingSlicePrepare(u32 ringNum, u32 sliceNum,
         bool useInlineReduce, DeviceMem& outputMem, std::vector<Slice>& dataSegsSlice, const std::string &tag);
 
+    std::vector<std::vector<Slice>> ReduceScatterASYMRingSlicePrepare(u32 ringNum, u32 sliceNum,
+        bool useInlineReduce, DeviceMem& outputMem, std::vector<Slice>& dataSegsSlice, const std::string &tag);
+
     bool CCLMemSlice_{true};     // 每次Loop是否需要对CCLMem进行切片
     bool DMAReduceFlag_{false};  // 是否DMA消减
     bool scratchMemFlag_{false}; // 是否需要申请scratch memory，不需要申请则传入outputmem为scratchmem
