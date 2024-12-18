@@ -93,6 +93,28 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::RunIntraSeverReduceSc
     return HCCL_SUCCESS;
 }
 
+void CollAlignedReduceScatterAsymDoubleRingExecutor::FillMultiRingSlice(
+    const ExecMem &execMem,
+    const std::vector<std::vector<Slice>> &multiStreamSlice,
+    u32 sliceNum, u32 innerRankSize, u32 level2RankSize,
+    const u32 ringIndex, std::vector<Slice> &dataSlice)
+{
+    for (u32 level0Idx = 0; level0Idx < sliceNum; level0Idx++) {
+        Slice sliceTemp;
+        for (u32 level2Idx = 0; level2Idx < level2RankSize; level2Idx++) {
+            for (u32 level1Idx = 0; level1Idx < innerRankSize; level1Idx++) {
+                sliceTemp.size = multiStreamSlice[ringIndex][level0Idx].size;
+                sliceTemp.offset = multiStreamSlice[ringIndex][level0Idx].offset +
+                    level1Idx * sliceNum * execMem.outputMem.size() +
+                    level2Idx * sliceNum * innerRankSize * execMem.outputMem.size();
+                dataSlice.push_back(sliceTemp);
+                HCCL_DEBUG("rank[%u] sliceTemp.size[%zu]，sliceTemp.offset[%llu]", topoAttr_.userRank,
+                    sliceTemp.size, sliceTemp.offset);
+            }
+        }
+    }
+}
+
 void CollAlignedReduceScatterAsymDoubleRingExecutor::CalLevel0DataSegsSlice(
     const ExecMem &execMem,
     const std::vector<std::vector<Slice>> &multiStreamSlice,
