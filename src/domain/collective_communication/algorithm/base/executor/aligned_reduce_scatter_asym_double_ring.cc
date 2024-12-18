@@ -335,6 +335,25 @@ HcclResult AlignedReduceScatterAsymDoubleRing::PrepareDeviceMems(
         const Slice &cclSlice = multRingsSlices_[ringIndex][subSliceIdx * sliceSize + sliceIdx];
         const Slice &txSlice = multRingsSlices_[ringIndex][txSliceIdx * sliceSize + sliceIdx];
         const Slice &subSlice = userMemInputSlicesOfDoubleRing_[ringIndex][subSliceIdx * sliceSize + sliceIdx];
+
+        if (step == 1){
+            if (ringIndex == 0){
+                rxSlice.size = rxSlice.size / 2;
+                cclSlice.size = cclSlice.size / 2;
+                // txSlice.size = txSlice.size / 2;
+                // subSlice.size = subSlice.size / 2;
+            } else {
+                rxSlice.offset = rxSlice.offset + rxSlice.size / 2;
+                cclSlice.offset = cclSlice.offset + cclSlice.size / 2;
+                // txSlice.offset = txSlice.offset + txSlice.size / 2;
+                // subSlice.offset = subSlice.offset + subSlice.size / 2;
+                rxSlice.size = rxSlice.size / 2;
+                cclSlice.size = cclSlice.size / 2;
+                // txSlice.size = txSlice.size / 2;
+                // subSlice.size = subSlice.size / 2;
+            }
+        }
+
         // PrepareReduceDeviceMems
         // Ack
         DeviceMem dst;
