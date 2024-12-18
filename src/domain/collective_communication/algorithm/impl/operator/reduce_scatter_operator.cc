@@ -191,7 +191,8 @@ HcclResult ReduceScatterOperator::SelectAlgfor91093(const OpParam& param, std::s
         } else {
             if (GetExternalInputHcclAlgoConfig(HcclCMDType::HCCL_CMD_REDUCE_SCATTER)[HCCL_ALGO_LEVEL_0] ==
                 HcclAlgoType::HCCL_ALGO_TYPE_FAST_DOUBLE_RING) {
-                algName = "ReduceScatterFastDoubleRingFor91093Executor";
+                // algName = "ReduceScatterFastDoubleRingFor91093Executor";
+                algName = "AlignedReduceScatterAsymDoubleRingExecutor";
             } else {
                 // algName = "AlignedReduceScatterDoubleRingFor91093Executor";
                 algName = "AlignedReduceScatterAsymDoubleRingExecutor";
