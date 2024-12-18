@@ -297,19 +297,7 @@ std::vector<std::vector<Slice>> CollReduceScatterExecutor::ReduceScatterASYMRing
 
     // 再将每个 slice 划分为 ringNum 份
     if (ringNum == OUTER_PLANE_NUM_IN_8PRING) {
-        if (useInlineReduce) {
-            multiStreamSlice = PrepareMultiRingSlice(dataSegsSlice, tag);
-        } else if (outputMem.size() % CCE_REDUCE_ALIGN_SIZE == 0) {
-            multiStreamSlice = PrepareMultiRingSlice(dataSegsSlice, tag);
-        } else {
-            multiStreamSlice = PrepareMultiRingSlice(dataSegsSlice, tag, true);
-        }
-    } else if (ringNum == OUTER_PLANE_NUM_IN_NPRING_DOUBLE) {
-        // 双环场景，需要传入正确的 niclist (不涉及网口裁剪)
         // 双环数据相同
-        
-        // if (useInlineReduce) {
-            // multiStreamSlice = PrepareMultiRingSlice(dataSegsSlice, tag, false, topoAttr_.nicList);
             for(int i=0;i<2;++i){
                 multiStreamSlice.push_back(dataSegsSlice);
             }
@@ -319,12 +307,17 @@ std::vector<std::vector<Slice>> CollReduceScatterExecutor::ReduceScatterASYMRing
             for (size_t i = 1; i < n / 2; ++i) {
                 std::swap(secondVector[i], secondVector[n - i]);
             }
+    } else if (ringNum == OUTER_PLANE_NUM_IN_NPRING_DOUBLE) {
+        // 双环数据相同
+            for(int i=0;i<2;++i){
+                multiStreamSlice.push_back(dataSegsSlice);
+            }
 
-        // } else if (outputMem.size() % CCE_REDUCE_ALIGN_SIZE == 0) {
-        //     // multiStreamSlice = PrepareMultiRingSlice(dataSegsSlice, tag, false, topoAttr_.nicList);
-        // } else {
-        //     // multiStreamSlice = PrepareMultiRingSlice(dataSegsSlice, tag, true, topoAttr_.nicList);
-        // }
+            std::vector<Slice>& secondVector = multiStreamSlice[1];
+            size_t n = secondVector.size();
+            for (size_t i = 1; i < n / 2; ++i) {
+                std::swap(secondVector[i], secondVector[n - i]);
+            }
     } else {
         multiStreamSlice.push_back(dataSegsSlice);
     }
