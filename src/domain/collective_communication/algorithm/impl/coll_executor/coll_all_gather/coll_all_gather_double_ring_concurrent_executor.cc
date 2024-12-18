@@ -143,6 +143,9 @@ HcclResult CollAllGatherDoubleRingConcurrentExecutor::KernelRun(const OpParam &p
         "", execMem.inputPtr, execMem.outputPtr, param.DataDes.count, param.DataDes.dataType, 0, HCCL_REDUCE_RESERVED
     };
     HcomCollOpInfo *opInfoPtr = nullptr;
+    std::cout << "inputMemSize: " << inputMemSize << "\n";
+    std::cout << "level0RankSize: " << level0RankSize << "\n";
+    std::cout << "syncTrans: " << syncTrans << "\n";
 
     // 图模式opinfo为空，需要将数据从ccl input拷贝到ccl output上
     HcclResult ret = HCCL_SUCCESS;
