@@ -35,9 +35,12 @@ private:
         const std::vector<std::vector<Slice>> &multRingsUserMemSlice = std::vector<std::vector<Slice>>(0),
         const bool retryEnable = false) override;
     virtual HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
-    virtual HcclResult CalLevel1DataSegsSlice(const ExecMem &execMem, const u32 &commIndex,
+    void CalLevel0DataSegsSlice(const ExecMem &execMem, const std::vector<std::vector<Slice>> &multiStreamSlice,
         u32 sliceNum, u32 innerRankSize, u32 level2RankSize,
-        std::vector<Slice> &level1DataSegsSlice) override;
+        std::vector<std::vector<Slice>> &level0DataSegsSlice);
+    HcclResult CalLevel1DataSegsSlice(const ExecMem &execMem, const u32 &commIndex,
+        u32 sliceNum, u32 innerRankSize, u32 level2RankSize,
+        std::vector<Slice> &level1DataSegsSlice);
 };
 
 }  // namespace hccl
