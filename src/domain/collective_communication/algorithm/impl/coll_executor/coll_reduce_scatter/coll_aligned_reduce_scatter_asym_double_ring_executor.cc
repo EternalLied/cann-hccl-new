@@ -93,6 +93,35 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::RunIntraSeverReduceSc
     return HCCL_SUCCESS;
 }
 
+HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::CalLevel1DataSegsSlice(
+    const ExecMem &execMem, const u32 &commIndex,
+    u32 sliceNum, u32 innerRankSize, u32 level2RankSize,
+    std::vector<Slice> &level1DataSegsSlice)
+{
+    for (u32 i = 0; i < innerRankSize; i++) {
+        Slice sliceTemp;
+        u32 level1UserRank;
+        CHK_RET(GetUserRankByRank(COMM_LEVEL1, commIndex, i, level1UserRank));
+        if (level2RankSize <= 1) {
+            sliceTemp.size = execMem.outputMem.size();
+            sliceTemp.offset = level1UserRank * execMem.outputMem.size();
+            level1DataSegsSlice.push_back(sliceTemp);
+            HCCL_DEBUG("rank[%u], level1DataSegsSlice[%u].offset=%llu, size=[%llu]", topoAttr_.userRank, i,
+                sliceTemp.offset, sliceTemp.size);
+        } else {
+            for (u32 level2Idx = 0; level2Idx < level2RankSize; level2Idx++) {
+                sliceTemp.size = execMem.outputMem.size();
+                sliceTemp.offset = (level1UserRank % (innerRankSize * sliceNum)) * execMem.outputMem.size() +
+                        level2Idx * sliceNum * innerRankSize * execMem.outputMem.size();
+                level1DataSegsSlice.push_back(sliceTemp);
+                HCCL_DEBUG("rank[%u], level1DataSegsSlice[%u].offset=%llu, size=[%llu]", topoAttr_.userRank, i,
+                    sliceTemp.offset, sliceTemp.size);
+            }
+        }
+    }
+    return HCCL_SUCCESS;
+}
+
 HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::KernelRun(const OpParam &param, ExecMem &execMem)
 {
     HCCL_INFO("[CollReduceScatterRingFor91093Executor][KernelRun] The ReduceScatterDoubleRingExecutor starts.");
