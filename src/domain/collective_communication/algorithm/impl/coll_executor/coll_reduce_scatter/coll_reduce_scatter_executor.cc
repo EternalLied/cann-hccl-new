@@ -282,4 +282,54 @@ std::vector<std::vector<Slice>> CollReduceScatterExecutor::ReduceScatterRingSlic
     return multiStreamSlice;
 }
 
+std::vector<std::vector<Slice>> CollReduceScatterExecutor::ReduceScatterASYMRingSlicePrepare(u32 ringNum, u32 sliceNum,
+    bool useInlineReduce, DeviceMem& outputMem, std::vector<Slice>& dataSegsSlice, const std::string &tag)
+{
+    std::vector<std::vector<Slice>> multiStreamSlice;
+    u64 outputMenSize = outputMem.size();
+    dataSegsSlice.clear();
+    Slice sliceTemp;
+    for (u32 i = 0; i < sliceNum; i++) {    // 根据数据量算每个环上数据的偏移和大小
+        sliceTemp.size = outputMenSize;
+        sliceTemp.offset = outputMenSize * i;
+        dataSegsSlice.push_back(sliceTemp);
+    }
+
+    // 再将每个 slice 划分为 ringNum 份
+    if (ringNum == OUTER_PLANE_NUM_IN_8PRING) {
+        if (useInlineReduce) {
+            multiStreamSlice = PrepareMultiRingSlice(dataSegsSlice, tag);
+        } else if (outputMem.size() % CCE_REDUCE_ALIGN_SIZE == 0) {
+            multiStreamSlice = PrepareMultiRingSlice(dataSegsSlice, tag);
+        } else {
+            multiStreamSlice = PrepareMultiRingSlice(dataSegsSlice, tag, true);
+        }
+    } else if (ringNum == OUTER_PLANE_NUM_IN_NPRING_DOUBLE) {
+        // 双环场景，需要传入正确的 niclist (不涉及网口裁剪)
+        // 双环数据相同
+        
+        // if (useInlineReduce) {
+            // multiStreamSlice = PrepareMultiRingSlice(dataSegsSlice, tag, false, topoAttr_.nicList);
+            for(int i=0;i<2;++i){
+                multiStreamSlice.push_back(dataSegsSlice);
+            }
+
+            std::vector<Slice>& secondVector = multiStreamSlice[1];
+            size_t n = secondVector.size();
+            for (size_t i = 1; i < n / 2; ++i) {
+                std::swap(secondVector[i], secondVector[n - i]);
+            }
+
+        // } else if (outputMem.size() % CCE_REDUCE_ALIGN_SIZE == 0) {
+        //     // multiStreamSlice = PrepareMultiRingSlice(dataSegsSlice, tag, false, topoAttr_.nicList);
+        // } else {
+        //     // multiStreamSlice = PrepareMultiRingSlice(dataSegsSlice, tag, true, topoAttr_.nicList);
+        // }
+    } else {
+        multiStreamSlice.push_back(dataSegsSlice);
+    }
+
+    return multiStreamSlice;
+}
+
 } // namespace hccl

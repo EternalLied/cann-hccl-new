@@ -159,7 +159,7 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::CalLevel1DataSegsSlic
 
 HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::KernelRun(const OpParam &param, ExecMem &execMem)
 {
-    HCCL_INFO("[CollReduceScatterRingFor91093Executor][KernelRun] The ReduceScatterDoubleRingExecutor starts.");
+    HCCL_INFO("[CollAlignedReduceScatterAsymDoubleRingExecutor][KernelRun] The CollAlignedReduceScatterAsymDoubleRingExecutor starts.");
     u32 perDataSize = 0;
     CHK_RET(SalGetDataTypeSize(param.DataDes.dataType, perDataSize));
 
@@ -198,7 +198,9 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::KernelRun(const OpPar
     bool isInlineReduce = IsSupportSDMAReduce(execMem.inputMem.ptr(), execMem.scratchMem.ptr(), param.DataDes.dataType,
         param.reduceType);
     useInlineRduce = isInlineReduce && algoAttr_.inlineReduceSwitchOn;
-    multiStreamSlice = ReduceScatterRingSlicePrepare(ringNum, sliceNum, useInlineRduce, execMem.outputMem,
+
+    // Slice双环数据相同
+    multiStreamSlice = ReduceScatterASYMRingSlicePrepare(ringNum, sliceNum, useInlineRduce, execMem.outputMem,
         dataSegsSlice, param.tag);
 
     printf("dataSegsSlice.size(): %d\n", dataSegsSlice.size());
