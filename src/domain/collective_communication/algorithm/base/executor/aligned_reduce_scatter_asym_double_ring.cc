@@ -331,10 +331,10 @@ HcclResult AlignedReduceScatterAsymDoubleRing::PrepareDeviceMems(
 {
     u32 sliceSize = multRingsSlices_[ringIndex].size() / rankSize;
     for (u32 sliceIdx = 0; sliceIdx < sliceSize; sliceIdx++) {
-        const Slice &rxSlice = multRingsSlices_[ringIndex][rxSliceIdx * sliceSize + sliceIdx];
-        const Slice &cclSlice = multRingsSlices_[ringIndex][subSliceIdx * sliceSize + sliceIdx];
-        const Slice &txSlice = multRingsSlices_[ringIndex][txSliceIdx * sliceSize + sliceIdx];
-        const Slice &subSlice = userMemInputSlicesOfDoubleRing_[ringIndex][subSliceIdx * sliceSize + sliceIdx];
+        Slice &rxSlice = multRingsSlices_[ringIndex][rxSliceIdx * sliceSize + sliceIdx];
+        Slice &cclSlice = multRingsSlices_[ringIndex][subSliceIdx * sliceSize + sliceIdx];
+        Slice &txSlice = multRingsSlices_[ringIndex][txSliceIdx * sliceSize + sliceIdx];
+        Slice &subSlice = userMemInputSlicesOfDoubleRing_[ringIndex][subSliceIdx * sliceSize + sliceIdx];
 
         if (step == 1){
             if (ringIndex == 0){
