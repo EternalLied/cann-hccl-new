@@ -356,6 +356,13 @@ HcclResult CollCommExecutor::MultiRingAllGatherConcurrent(const std::string &tag
             CHK_RET(GetSubStreamInfoOnOneRing(ringIndex, subStreamsInOneRing, mainSignalsInOneRing,
                                               subSignalsInOneRing));
         }
+        std::vector<std::shared_ptr<ThreadManage>> threadManage;
+        if (!topoMatcher_->GetExternalInputHcclEnableFfts() &&
+            workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
+            u32 slaveNum = algResResp_->slaveStreams.size();
+            threadManage.resize(slaveNum);
+            CHK_RET(GetStreamThreadManage(tag, slaveNum + 1, threadManage));
+        }
         bool isSdma = multRingsSliceZero[ringIndex].first;
         if (ringIndex != (ringNum - 1)) { // 最后一个环是主stream，所以这里减1，符合条件的走从stream
             if (!topoMatcher_->GetExternalInputHcclEnableFfts() &&
@@ -363,7 +370,7 @@ HcclResult CollCommExecutor::MultiRingAllGatherConcurrent(const std::string &tag
                 if (opInfo != nullptr) {
                     ExecutorType type = isSdma ?
                         ExecutorType::ALLGATHER_RING_DIRECT : ExecutorType::ALLGATHER_RING_DIRECT_RDMA;
-                    algResResp_->threadManage[ringIndex]->Prepare(
+                    threadManage[ringIndex]->Prepare(
                         outputMem, outputMem, inputMem, count, dataType,
                         algResResp_->slaveStreams[ringIndex], HcclReduceOp::HCCL_REDUCE_RESERVED, OUTER_BRIDGE_RANK_ID,
                         singleRingSliceZero, baseOffset, ringNics[ringIndex%halfRingSize], tag, profStage,
@@ -371,13 +378,13 @@ HcclResult CollCommExecutor::MultiRingAllGatherConcurrent(const std::string &tag
                         ringIndex, type, 0, opInfo, subStreamsInOneRing,
                         mainSignalsInOneRing, subSignalsInOneRing, rankOrder, userMemOutputSlices);
                 } else {
-                    algResResp_->threadManage[ringIndex]->Prepare(outputMem, outputMem, inputMem, count, dataType,
+                    threadManage[ringIndex]->Prepare(outputMem, outputMem, inputMem, count, dataType,
                         algResResp_->slaveStreams[ringIndex], HcclReduceOp::HCCL_REDUCE_RESERVED, OUTER_BRIDGE_RANK_ID,
                         singleRingSliceZero, baseOffset, ringNics[ringIndex%halfRingSize], tag, profStage,
                         outerRingCommInfo, algResResp_->notifiesS2M[ringIndex], algResResp_->notifiesM2S[ringIndex],
                         ringIndex, ExecutorType::ALLGATHER_RING);
                 }
-                algResResp_->threadManage[ringIndex]->NotifyStart();    // 给线程发信号启动处理
+                threadManage[ringIndex]->NotifyStart();    // 给线程发信号启动处理
             } else {
                 ret = LocalNotify::Wait(algResResp_->slaveStreams[ringIndex], dispatcher_,
                     algResResp_->notifiesS2M[ringIndex], profStage);
@@ -455,7 +462,7 @@ HcclResult CollCommExecutor::MultiRingAllGatherConcurrent(const std::string &tag
             for (u32 ring = 0; ring < (ringNum - 1); ring++) {
                 if (!topoMatcher_->GetExternalInputHcclEnableFfts() &&
                     workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
-                    algResResp_->threadManage[ring]->WaitDone(); // 单算子模式，等待线程处理完成信号
+                    threadManage[ring]->WaitDone(); // 单算子模式，等待线程处理完成信号
                 }
                 ret = LocalNotify::Wait(stream, dispatcher_, algResResp_->notifiesM2S[ring], profStage);
                 CHK_PRT_RET(ret != HCCL_SUCCESS,
