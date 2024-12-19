@@ -336,7 +336,7 @@ HcclResult AlignedReduceScatterAsymDoubleRing::PrepareDeviceMems(
         Slice txSlice = multRingsSlices_[ringIndex][txSliceIdx * sliceSize + sliceIdx];
         Slice subSlice = userMemInputSlicesOfDoubleRing_[ringIndex][subSliceIdx * sliceSize + sliceIdx];
 
-        if (step == 1){
+        if (step == 0){
             if (ringIndex == 0){
                 rxSlice.size = rxSlice.size / 2;
                 cclSlice.size = cclSlice.size / 2;
@@ -607,13 +607,14 @@ HcclResult AlignedReduceScatterAsymDoubleRing::RunReduceScatter(const u32 rank, 
     CHK_RET(ExecEmptyTasks());
 
     // 例如rank[0,1,2,3]中，rank0的rxSliceIdx = 2，txSliceIdx = 3, subSliceIdx = 1
+    // 例如rank[0,1,2,3,4,5,6,7]中，rank0的rxSliceIdx = 5, txSliceIdx = 4, subSliceIdx
     // 从环初始indexes
-    u32 txSliceIdxSub  = (rank + rankSize - 1) % rankSize;
-    u32 rxSliceIdxSub  = (rank + rankSize - DMA_REDUCE_TWO_OFFSET) % rankSize;
+    u32 txSliceIdxSub  = (rank + rankSize) % rankSize;
+    u32 rxSliceIdxSub  = (rank + rankSize + 3 - DMA_REDUCE_TWO_OFFSET) % rankSize;
     u32 subSliceIdxSub = (rank + rankSize - DMA_REDUCE_THREE_OFFSET) % rankSize;
     // 主环初始indexes
-    u32 txSliceIdxMain  = (rankSize - rank - 1 + rankSize) % rankSize;
-    u32 rxSliceIdxMain  = (rankSize - rank - DMA_REDUCE_TWO_OFFSET + rankSize) % rankSize;
+    u32 txSliceIdxMain  = (rankSize - rank + rankSize) % rankSize;
+    u32 rxSliceIdxMain  = (rankSize - rank + 3 - DMA_REDUCE_TWO_OFFSET + rankSize) % rankSize;
     u32 subSliceIdxMain = (rankSize - rank - DMA_REDUCE_THREE_OFFSET + rankSize) % rankSize;
 
     // step减为一半
