@@ -52,7 +52,7 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::DoubleRingReduceScatt
     CHK_RET(CollectMultiRingsRankOrder(ringNum, multiRingsOrder, rankOrders));
     // 初始化executor
     std::unique_ptr<ExecutorBase> executor;
-    executor.reset(new (std::nothrow) AlignedReduceScatterDoubleRing(
+    executor.reset(new (std::nothrow) AlignedReduceScatterAsymDoubleRing(
         dispatcher_, reduceAttr, opInfo, topoAttr_.userRank, algResResp_->slaveStreams,
         algResResp_->notifiesM2S, algResResp_->notifiesS2M, rankOrders, userMemInputSlicesOfDoubleRing));
     CHK_SMART_PTR_NULL(executor);
