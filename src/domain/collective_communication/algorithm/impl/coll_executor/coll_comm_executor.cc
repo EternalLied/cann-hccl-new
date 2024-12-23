@@ -27,13 +27,6 @@ HcclResult CollCommExecutor::GetSubStreamInfoOnOneRing(const u32 ringIndex,
                                                        std::vector<std::shared_ptr<LocalNotify>> &subSignalsInOneRing)
 {
     u32 ringNum = algResResp_->slaveStreams.size() + 1;
-    if (topoMatcher_->GetExternalInputEnableRdmaSdmaConcurrent() &&
-        (topoAttr_.deviceType == DevType::DEV_TYPE_910_93) &&
-        (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING)) {
-        subStreamsInOneRing.push_back(algResResp_->slaveStreams[ringIndex + RDMA_ADD_STREAMS_NUM]);
-        mainSignalsInOneRing.push_back(algResResp_->notifiesM2S[ringIndex + RDMA_ADD_STREAMS_NUM]);
-        subSignalsInOneRing.push_back(algResResp_->notifiesS2M[ringIndex + RDMA_ADD_STREAMS_NUM]);
-    } else 
     if (ringNum == OUTER_PLANE_NUM_IN_NPRING_DOUBLE * STREAM_NUM_FOR_DMAREDUCE_ONE_RING) {
         // double ring
         subStreamsInOneRing.push_back(algResResp_->slaveStreams[ringIndex + 1]);

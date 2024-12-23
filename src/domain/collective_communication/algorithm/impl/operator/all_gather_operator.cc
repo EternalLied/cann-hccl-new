@@ -146,7 +146,7 @@ HcclResult AllGatherOperator::SelectAlgfor91093(const OpParam& param, std::strin
             algName = "AllGatherMeshExecutor";
         }
     } else if (GetExternalInputEnableRdmaSdmaConcurrent() && topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING &&
-        !param.aicpuUnfoldMode) {
+        !param.aicpuUnfoldMode && (GetWorkflowMode() != HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE)) {
         if (!(UseInterServerRingAlgo(algType_) || UseInterServerNBAlgo(algType_))) {
             HcclResult ret = SetInterServerRingAlgo(algType_);
             HCCL_WARNING("[AllGatherOperator][SelectAlgfor91093] concurrent only support ring or NB in AlgoLevel1 "\
