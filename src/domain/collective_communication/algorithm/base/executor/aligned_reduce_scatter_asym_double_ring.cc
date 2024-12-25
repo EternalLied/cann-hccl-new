@@ -392,7 +392,7 @@ HcclResult AlignedReduceScatterAsymDoubleRing::PrepareDeviceMems(
         if (step == rankSize - DMA_REDUCE_ASYM_OFFSET) {
             // do nothing
         } else if (step == rankSize - DMA_REDUCE_ASYM_OFFSET - 1 && opInfo_->outputAddr != nullptr) {
-            if (ringIndex == 0){
+            if (ringIndex == 0) {
                             HCCL_DEBUG("Memcpy operation: step[%u] subStream[%u], src rank[%u] sends offset[%llu], size[%llu], "
                 "dst rank[%u] starts to rcv offset[%llu], size[%llu], "
                 "from userMemIn_ to userMemOut_", step, ringIndex + 1, userRank_, subSlice.offset, subSlice.size,
