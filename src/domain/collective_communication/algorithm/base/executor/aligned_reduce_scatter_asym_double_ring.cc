@@ -200,15 +200,15 @@ HcclResult AlignedReduceScatterAsymDoubleRing::PrepareInitSlices(const u32 rankS
     // 第-1步，片内将部分数据从userIn搬到cclIn
     Slice srcInitSlice0 = userMemInputSlicesOfDoubleRing_[ringIndex][initSlice0Idx * discontinuousSliceSize + discontinuousSliceIdx];
     Slice dstInitSlice0 = multRingsSlices_[ringIndex][initSlice0Idx * discontinuousSliceSize + discontinuousSliceIdx];
-    if (ringIndex == 0){
-        srcInitSlice0.size = srcInitSlice0.size / 2;
-        dstInitSlice0.size = dstInitSlice0.size / 2;
-    } else {
-        srcInitSlice0.offset = srcInitSlice0.offset + srcInitSlice0.size / 2;
-        dstInitSlice0.offset = dstInitSlice0.offset + dstInitSlice0.size / 2;
-        srcInitSlice0.size = srcInitSlice0.size / 2;
-        dstInitSlice0.size = dstInitSlice0.size / 2;
-    }
+    // if (ringIndex == 0){
+    //     srcInitSlice0.size = srcInitSlice0.size / 2;
+    //     dstInitSlice0.size = dstInitSlice0.size / 2;
+    // } else {
+    //     srcInitSlice0.offset = srcInitSlice0.offset + srcInitSlice0.size / 2;
+    //     dstInitSlice0.offset = dstInitSlice0.offset + dstInitSlice0.size / 2;
+    //     srcInitSlice0.size = srcInitSlice0.size / 2;
+    //     dstInitSlice0.size = dstInitSlice0.size / 2;
+    // }
     srcInit    = DeviceMem::create(static_cast<u8 *>(opInfo_->inputAddr) + srcInitSlice0.offset, srcInitSlice0.size);
     dstInit    = inputMem_.range(dstInitSlice0.offset, dstInitSlice0.size);
 
@@ -392,7 +392,7 @@ HcclResult AlignedReduceScatterAsymDoubleRing::PrepareDeviceMems(
         if (step == rankSize - DMA_REDUCE_ASYM_OFFSET) {
             // do nothing
         } else if (step == rankSize - DMA_REDUCE_ASYM_OFFSET - 1 && opInfo_->outputAddr != nullptr) {
-            if (ringIndex == 0) {
+            // if (ringIndex == 0) {
                             HCCL_DEBUG("Memcpy operation: step[%u] subStream[%u], src rank[%u] sends offset[%llu], size[%llu], "
                 "dst rank[%u] starts to rcv offset[%llu], size[%llu], "
                 "from userMemIn_ to userMemOut_", step, ringIndex + 1, userRank_, subSlice.offset, subSlice.size,
@@ -401,9 +401,9 @@ HcclResult AlignedReduceScatterAsymDoubleRing::PrepareDeviceMems(
                 subSlice.size);
             localDst = DeviceMem::create(static_cast<u8 *>(opInfo_->outputAddr) + lastStepOffsets_[ringIndex],
                 subSlice.size);
-            } else {
-                // do nothing
-            }
+            // } else {
+            //     // do nothing
+            // }
         } else {
             HCCL_DEBUG("Memcpy operation: step[%u] subStream[%u], src rank[%u] sends offset[%llu], size[%llu], "
                 "dst rank[%u] starts to rcv offset[%llu], size[%llu], "
