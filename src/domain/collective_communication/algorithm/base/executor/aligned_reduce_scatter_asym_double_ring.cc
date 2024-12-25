@@ -273,11 +273,11 @@ HcclResult AlignedReduceScatterAsymDoubleRing::RunInitStep(const u32 rank, const
 {
     u32 DMA_REDUCE_ASYM_OFFSET = rankSize / 2 + 1;
     //主环初始indexes
-    u32 initSlice0Idx    = (rankSize - rank + rankSize - DMA_REDUCE_ASYM_OFFSET + 2) % rankSize;
-    u32 initSlice1Idx    = (rankSize - rank + rankSize - DMA_REDUCE_ASYM_OFFSET + 1) % rankSize;
+    u32 initSlice0Idx    = (rankSize - rank + rankSize - DMA_REDUCE_ASYM_OFFSET + 1) % rankSize;
+    u32 initSlice1Idx    = (rankSize - rank + rankSize - DMA_REDUCE_ASYM_OFFSET) % rankSize;
     // 从环初始indexes
-    u32 subInitSlice0Idx     = (rank + rankSize - DMA_REDUCE_ASYM_OFFSET + 2) % rankSize;
-    u32 subInitSlice1Idx     = (rank + rankSize - DMA_REDUCE_ASYM_OFFSET + 1) % rankSize;
+    u32 subInitSlice0Idx     = (rank + rankSize - DMA_REDUCE_ASYM_OFFSET + 1) % rankSize;
+    u32 subInitSlice1Idx     = (rank + rankSize - DMA_REDUCE_ASYM_OFFSET) % rankSize;
     u32 discontinuousSliceSize = multRingsSlices_[ALIGNED_SUB_RING_INDEX].size() / rankSize;
     DeviceMem dstInit;
     DeviceMem srcInit;
@@ -640,13 +640,13 @@ HcclResult AlignedReduceScatterAsymDoubleRing::RunReduceScatter(const u32 rank, 
     // 从环初始indexes
     u32 DMA_REDUCE_ASYM_OFFSET = rankSize / 2 + 1;
 
-    u32 txSliceIdxSub  = (rank + rankSize - DMA_REDUCE_ASYM_OFFSET + 2) % rankSize;
-    u32 rxSliceIdxSub  = (rank + rankSize - DMA_REDUCE_ASYM_OFFSET + 1) % rankSize;
-    u32 subSliceIdxSub = (rank + rankSize - DMA_REDUCE_ASYM_OFFSET) % rankSize;
+    u32 txSliceIdxSub  = (rank + rankSize - DMA_REDUCE_ASYM_OFFSET + 1) % rankSize;
+    u32 rxSliceIdxSub  = (rank + rankSize - DMA_REDUCE_ASYM_OFFSET) % rankSize;
+    u32 subSliceIdxSub = (rank + rankSize - DMA_REDUCE_ASYM_OFFSET - 1) % rankSize;
     // 主环初始indexes
-    u32 txSliceIdxMain  = (rankSize - rank + rankSize - DMA_REDUCE_ASYM_OFFSET + 2) % rankSize;
-    u32 rxSliceIdxMain  = (rankSize - rank + rankSize - DMA_REDUCE_ASYM_OFFSET + 1) % rankSize;
-    u32 subSliceIdxMain = (rankSize - rank + rankSize - DMA_REDUCE_ASYM_OFFSET) % rankSize;
+    u32 txSliceIdxMain  = (rankSize - rank + rankSize - DMA_REDUCE_ASYM_OFFSET + 1) % rankSize;
+    u32 rxSliceIdxMain  = (rankSize - rank + rankSize - DMA_REDUCE_ASYM_OFFSET) % rankSize;
+    u32 subSliceIdxMain = (rankSize - rank + rankSize - DMA_REDUCE_ASYM_OFFSET - 1) % rankSize;
 
     // step减为一半
     for (u32 step = 0; step < rankSize / 2; step++) {
