@@ -61,12 +61,12 @@ protected:
         std::vector<DeviceMem> &mainLocalSrcMems, std::vector<DeviceMem> &mainLocalDstMems,
         std::vector<DeviceMem> &subLocalSrcMems, std::vector<DeviceMem> &subLocalDstMems);
     virtual HcclResult PrepareDeviceMems(
-        const u32 step, const u32 ringIndex, const u32 rankSize,
+        const u32 rank, const u32 step, const u32 ringIndex, const u32 rankSize,
         const u32 txSliceIdx, const u32 rxSliceIdx, const u32 subSliceIdx,
         std::vector<SenderMemoryInfo> &txReduceMems, std::vector<ReducerMemoryInfo> &rxReduceMems,
         std::vector<DeviceMem> &localSrcMems, std::vector<DeviceMem> &localDstMems);
     HcclResult PreRunStreams(
-        const u32 step, const u32 rankSize,
+        const u32 rank, const u32 step, const u32 rankSize,
         const u32 txSliceIdxMain, const u32 rxSliceIdxMain, const u32 subSliceIdxMain,
         const u32 txSliceIdxSub, const u32 rxSliceIdxSub, const u32 subSliceIdxSub,
         std::vector<SenderMemoryInfo> &txReduceMemsMain,

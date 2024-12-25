@@ -333,7 +333,7 @@ HcclResult AlignedReduceScatterAsymDoubleRing::PreSync(const u32 ringIndex)
 }
 
 HcclResult AlignedReduceScatterAsymDoubleRing::PrepareDeviceMems(
-    const u32 step, const u32 ringIndex, const u32 rankSize,
+    const u32 rank, const u32 step, const u32 ringIndex, const u32 rankSize,
     const u32 txSliceIdx, const u32 rxSliceIdx, const u32 subSliceIdx,
     std::vector<SenderMemoryInfo> &txReduceMems, std::vector<ReducerMemoryInfo> &rxReduceMems,
     std::vector<DeviceMem> &localSrcMems, std::vector<DeviceMem> &localDstMems)
@@ -362,7 +362,15 @@ HcclResult AlignedReduceScatterAsymDoubleRing::PrepareDeviceMems(
                 // subSlice.size = subSlice.size / 2;
             }
         }
-
+        if (rank == 0){
+        std::cout << "rank: " << rank << std::endl;
+        std::cout << "step: " << step << std::endl;
+        std::cout << "ringIndex: " << ringIndex << std::endl;
+        std::cout << "rxSlice: offset = " << rxSlice.offset << ", size = " << rxSlice.size << std::endl;
+        std::cout << "txSlice: offset = " << txSlice.offset << ", size = " << txSlice.size << std::endl;
+        std::cout << "cclSlice: offset = " << cclSlice.offset << ", size = " << cclSlice.size << std::endl;
+        std::cout << "subSlice: offset = " << subSlice.offset << ", size = " << subSlice.size << std::endl;
+        }
         // PrepareReduceDeviceMems
         // Ack
         u32 DMA_REDUCE_ASYM_OFFSET = rankSize / 2 + 1;
@@ -581,7 +589,7 @@ HcclResult AlignedReduceScatterAsymDoubleRing::RunAllStreams(const u32 step, con
 }
 
 HcclResult AlignedReduceScatterAsymDoubleRing::PreRunStreams(
-    const u32 step, const u32 rankSize,
+    const u32 rank, const u32 step, const u32 rankSize,
     const u32 txSliceIdxMain, const u32 rxSliceIdxMain, const u32 subSliceIdxMain,
     const u32 txSliceIdxSub, const u32 rxSliceIdxSub, const u32 subSliceIdxSub,
     std::vector<SenderMemoryInfo> &txReduceMemsMain,
@@ -593,11 +601,11 @@ HcclResult AlignedReduceScatterAsymDoubleRing::PreRunStreams(
     std::vector<DeviceMem> &localSrcMemsSub,
     std::vector<DeviceMem> &localDstMemsSub)
 {
-    CHK_RET(PrepareDeviceMems(step, ALIGNED_MAIN_RING_INDEX, rankSize,
+    CHK_RET(PrepareDeviceMems(rank, step, ALIGNED_MAIN_RING_INDEX, rankSize,
         txSliceIdxMain, rxSliceIdxMain, subSliceIdxMain,
         txReduceMemsMain, rxReduceMemsMain,
         localSrcMemsMain, localDstMemsMain));
-    CHK_RET(PrepareDeviceMems(step, ALIGNED_SUB_RING_INDEX, rankSize,
+    CHK_RET(PrepareDeviceMems(rank, step, ALIGNED_SUB_RING_INDEX, rankSize,
         txSliceIdxSub, rxSliceIdxSub, subSliceIdxSub,
         txReduceMemsSub, rxReduceMemsSub,
         localSrcMemsSub, localDstMemsSub));
@@ -646,7 +654,7 @@ HcclResult AlignedReduceScatterAsymDoubleRing::RunReduceScatter(const u32 rank, 
         std::vector<DeviceMem> localDstMemsMain;
         std::vector<DeviceMem> localSrcMemsSub;
         std::vector<DeviceMem> localDstMemsSub;
-        CHK_RET(PreRunStreams(step, rankSize, 
+        CHK_RET(PreRunStreams(rank, step, rankSize, 
             txSliceIdxMain, rxSliceIdxMain, subSliceIdxMain,
             txSliceIdxSub, rxSliceIdxSub, subSliceIdxSub,
             txReduceMemsMain, rxReduceMemsMain, txReduceMemsSub, rxReduceMemsSub,
