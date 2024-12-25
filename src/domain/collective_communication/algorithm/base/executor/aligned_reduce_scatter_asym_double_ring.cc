@@ -198,17 +198,17 @@ HcclResult AlignedReduceScatterAsymDoubleRing::PrepareInitSlices(const u32 rankS
     DeviceMem &dstInit, DeviceMem &srcInit, DeviceMem &dstSubInit, DeviceMem &srcSubInit)
 {
     // 第-1步，片内将部分数据从userIn搬到cclIn
-    Slice srcInitSlice0 = userMemInputSlicesOfDoubleRing_[ringIndex][initSlice0Idx * discontinuousSliceSize + discontinuousSliceIdx];
-    Slice dstInitSlice0 = multRingsSlices_[ringIndex][initSlice0Idx * discontinuousSliceSize + discontinuousSliceIdx];
-    if (ringIndex == 0){
-        srcInitSlice0.size = srcInitSlice0.size / 2;
-        dstInitSlice0.size = dstInitSlice0.size / 2;
-    } else {
-        srcInitSlice0.offset = srcInitSlice0.offset + srcInitSlice0.size / 2;
-        dstInitSlice0.offset = dstInitSlice0.offset + dstInitSlice0.size / 2;
-        srcInitSlice0.size = srcInitSlice0.size / 2;
-        dstInitSlice0.size = dstInitSlice0.size / 2;
-    }
+    const Slice &srcInitSlice0 = userMemInputSlicesOfDoubleRing_[ringIndex][initSlice0Idx * discontinuousSliceSize + discontinuousSliceIdx];
+    const Slice &dstInitSlice0 = multRingsSlices_[ringIndex][initSlice0Idx * discontinuousSliceSize + discontinuousSliceIdx];
+    // if (ringIndex == 0){
+    //     srcInitSlice0.size = srcInitSlice0.size / 2;
+    //     dstInitSlice0.size = dstInitSlice0.size / 2;
+    // } else {
+    //     srcInitSlice0.offset = srcInitSlice0.offset + srcInitSlice0.size / 2;
+    //     dstInitSlice0.offset = dstInitSlice0.offset + dstInitSlice0.size / 2;
+    //     srcInitSlice0.size = srcInitSlice0.size / 2;
+    //     dstInitSlice0.size = dstInitSlice0.size / 2;
+    // }
     srcInit    = DeviceMem::create(static_cast<u8 *>(opInfo_->inputAddr) + srcInitSlice0.offset, srcInitSlice0.size);
     dstInit    = inputMem_.range(dstInitSlice0.offset, dstInitSlice0.size);
 
