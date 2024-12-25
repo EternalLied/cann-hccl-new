@@ -366,6 +366,11 @@ HcclResult AlignedReduceScatterAsymDoubleRing::PrepareDeviceMems(
         std::cout << "rank: " << rank << std::endl;
         std::cout << "step: " << step << std::endl;
         std::cout << "ringIndex: " << ringIndex << std::endl;
+        std::cout << "rxSliceIdx = " << rxSliceIdx << std::endl;
+        std::cout << "txSliceIdx = " << txSliceIdx << std::endl;
+        std::cout << "subSliceIdx = " << subSliceIdx << std::endl;
+        std::cout << "cclSlice: offset = " << cclSlice.offset << ", size = " << cclSlice.size << std::endl;
+        std::cout << "subSlice: offset = " << subSlice.offset << ", size = " << subSlice.size << std::endl;
         std::cout << "rxSlice: offset = " << rxSlice.offset << ", size = " << rxSlice.size << std::endl;
         std::cout << "txSlice: offset = " << txSlice.offset << ", size = " << txSlice.size << std::endl;
         std::cout << "cclSlice: offset = " << cclSlice.offset << ", size = " << cclSlice.size << std::endl;
