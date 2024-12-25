@@ -263,12 +263,13 @@ HcclResult AlignedReduceScatterAsymDoubleRing::MemcpyInitSlices(
 
 HcclResult AlignedReduceScatterAsymDoubleRing::RunInitStep(const u32 rank, const u32 rankSize)
 {
+    u32 DMA_REDUCE_ASYM_OFFSET = rankSize / 2 + 1;
     //主环初始indexes
-    u32 initSlice0Idx    = (rankSize - rank - 1 + rankSize) % rankSize;
-    u32 initSlice1Idx    = (rankSize - rank - DMA_REDUCE_TWO_OFFSET + rankSize) % rankSize;
+    u32 initSlice0Idx    = (rankSize - rank + rankSize - DMA_REDUCE_ASYM_OFFSET + 1) % rankSize;
+    u32 initSlice1Idx    = (rankSize - rank + rankSize - DMA_REDUCE_ASYM_OFFSET) % rankSize;
     // 从环初始indexes
-    u32 subInitSlice0Idx     = (rank + rankSize - 1) % rankSize;
-    u32 subInitSlice1Idx     = (rank + rankSize - DMA_REDUCE_TWO_OFFSET) % rankSize;
+    u32 subInitSlice0Idx     = (rank + rankSize - DMA_REDUCE_ASYM_OFFSET + 1) % rankSize;
+    u32 subInitSlice1Idx     = (rank + rankSize - DMA_REDUCE_ASYM_OFFSET) % rankSize;
     u32 discontinuousSliceSize = multRingsSlices_[ALIGNED_SUB_RING_INDEX].size() / rankSize;
     DeviceMem dstInit;
     DeviceMem srcInit;
@@ -339,25 +340,26 @@ HcclResult AlignedReduceScatterAsymDoubleRing::PrepareDeviceMems(
         if (step == 0){
             if (ringIndex == 0){
                 rxSlice.size = rxSlice.size / 2;
-                cclSlice.size = cclSlice.size / 2;
-                // txSlice.size = txSlice.size / 2;
+                // cclSlice.size = cclSlice.size / 2;
+                txSlice.size = txSlice.size / 2;
                 // subSlice.size = subSlice.size / 2;
             } else {
                 rxSlice.offset = rxSlice.offset + rxSlice.size / 2;
-                cclSlice.offset = cclSlice.offset + cclSlice.size / 2;
-                // txSlice.offset = txSlice.offset + txSlice.size / 2;
+                // cclSlice.offset = cclSlice.offset + cclSlice.size / 2;
+                txSlice.offset = txSlice.offset + txSlice.size / 2;
                 // subSlice.offset = subSlice.offset + subSlice.size / 2;
                 rxSlice.size = rxSlice.size / 2;
-                cclSlice.size = cclSlice.size / 2;
-                // txSlice.size = txSlice.size / 2;
+                // cclSlice.size = cclSlice.size / 2;
+                txSlice.size = txSlice.size / 2;
                 // subSlice.size = subSlice.size / 2;
             }
         }
 
         // PrepareReduceDeviceMems
         // Ack
+        u32 DMA_REDUCE_ASYM_OFFSET = rankSize / 2 + 1;
         DeviceMem dst;
-        if (step == rankSize - DMA_REDUCE_TWO_OFFSET && opInfo_->outputAddr != nullptr) {
+        if (step == rankSize - DMA_REDUCE_ASYM_OFFSET && opInfo_->outputAddr != nullptr) {
             HCCL_DEBUG("Reduce operation: step[%u] stream[main], dst rank[%u] starts to rcv offset[%llu], size[%llu] "
                 "at userMemOut_", step, userRank_, lastStepOffsets_[ringIndex], rxSlice.size);
             dst = DeviceMem::create(static_cast<u8 *>(opInfo_->outputAddr) + lastStepOffsets_[ringIndex],
@@ -379,9 +381,9 @@ HcclResult AlignedReduceScatterAsymDoubleRing::PrepareDeviceMems(
         // PrepareLocalCopyDeviceMems
         DeviceMem localSrt;
         DeviceMem localDst;
-        if (step == rankSize - DMA_REDUCE_TWO_OFFSET) {
+        if (step == - 1) {
             // do nothing
-        } else if (step == rankSize - DMA_REDUCE_THREE_OFFSET && opInfo_->outputAddr != nullptr) {
+        } else if (step == rankSize - DMA_REDUCE_ASYM_OFFSET && opInfo_->outputAddr != nullptr) {
             HCCL_DEBUG("Memcpy operation: step[%u] subStream[%u], src rank[%u] sends offset[%llu], size[%llu], "
                 "dst rank[%u] starts to rcv offset[%llu], size[%llu], "
                 "from userMemIn_ to userMemOut_", step, ringIndex + 1, userRank_, subSlice.offset, subSlice.size,
@@ -607,15 +609,19 @@ HcclResult AlignedReduceScatterAsymDoubleRing::RunReduceScatter(const u32 rank, 
     CHK_RET(ExecEmptyTasks());
 
     // 例如rank[0,1,2,3]中，rank0的rxSliceIdx = 2，txSliceIdx = 3, subSliceIdx = 1
-    // 例如rank[0,1,2,3,4,5,6,7]中，rank0的rxSliceIdx = 5, txSliceIdx = 4, subSliceIdx
+    // 例如rank[0,1,2,3]中，rank0的rxSliceIdx = 1，txSliceIdx = 2, subSliceIdx = 3
+    // 例如rank[0,1,2,3]中，rank0的rxSliceIdx = 3，txSliceIdx = 2, subSliceIdx = 3
+    // 例如rank[0,1,2,3,4,5,6,7]中，rank0的rxSliceIdx = 5, txSliceIdx = 4, subSliceIdx = 
     // 从环初始indexes
-    u32 txSliceIdxSub  = (rank + rankSize) % rankSize;
-    u32 rxSliceIdxSub  = (rank + rankSize + 3 - DMA_REDUCE_TWO_OFFSET) % rankSize;
-    u32 subSliceIdxSub = (rank + rankSize - DMA_REDUCE_THREE_OFFSET) % rankSize;
+    u32 DMA_REDUCE_ASYM_OFFSET = rankSize / 2 + 1;
+
+    u32 txSliceIdxSub  = (rank + rankSize - DMA_REDUCE_ASYM_OFFSET + 1) % rankSize;
+    u32 rxSliceIdxSub  = (rank + rankSize - DMA_REDUCE_ASYM_OFFSET) % rankSize;
+    u32 subSliceIdxSub = (rank + rankSize - DMA_REDUCE_ASYM_OFFSET - 1) % rankSize;
     // 主环初始indexes
-    u32 txSliceIdxMain  = (rankSize - rank + rankSize) % rankSize;
-    u32 rxSliceIdxMain  = (rankSize - rank + 3 - DMA_REDUCE_TWO_OFFSET + rankSize) % rankSize;
-    u32 subSliceIdxMain = (rankSize - rank - DMA_REDUCE_THREE_OFFSET + rankSize) % rankSize;
+    u32 txSliceIdxMain  = (rankSize - rank + rankSize - DMA_REDUCE_ASYM_OFFSET + 1) % rankSize;
+    u32 rxSliceIdxMain  = (rankSize - rank + rankSize - DMA_REDUCE_ASYM_OFFSET) % rankSize;
+    u32 subSliceIdxMain = (rankSize - rank + rankSize - DMA_REDUCE_ASYM_OFFSET - 1) % rankSize;
 
     // step减为一半
     for (u32 step = 0; step < rankSize / 2; step++) {
