@@ -241,10 +241,10 @@ HcclResult AlignedReduceScatterAsymDoubleRing::MemcpyInitSlicesOnMainStreams(
     u64 ringIndex, DeviceMem &dstInit, DeviceMem &srcInit)
 {
     if (ringIndex == 1) {
-        CHK_RET(MainWaitSub());
-        CHK_RET(ExecutorBase::ExecEmptyTask(inputMem_, outputMem_, stream_, dispatcher_));
-        CHK_RET(MainRecordSub());
-        CHK_RET(HcclD2DMemcpyAsync(dispatcher_, dstInit, srcInit, stream_));
+        // CHK_RET(MainWaitSub());
+        // CHK_RET(ExecutorBase::ExecEmptyTask(inputMem_, outputMem_, stream_, dispatcher_));
+        // CHK_RET(MainRecordSub());
+        // CHK_RET(HcclD2DMemcpyAsync(dispatcher_, dstInit, srcInit, stream_));
     } else {
         CHK_RET(LocalNotify::Post(subStreams_[0], dispatcher_, mainSignals_[0], profilerInput_.stage));
         CHK_RET(LocalNotify::Wait(subStreams_[0], dispatcher_, subSignals_[0], profilerInput_.stage));
