@@ -209,10 +209,8 @@ HcclResult AlignedReduceScatterAsymDoubleRing::PrepareInitSlices(const u32 rankS
     //     srcInitSlice0.size = srcInitSlice0.size / 2;
     //     dstInitSlice0.size = dstInitSlice0.size / 2;
     // }
-    if (ringIndex == 0){
-        srcInit    = DeviceMem::create(static_cast<u8 *>(opInfo_->inputAddr) + srcInitSlice0.offset, srcInitSlice0.size);
-        dstInit    = inputMem_.range(dstInitSlice0.offset, dstInitSlice0.size);
-    }
+    srcInit    = DeviceMem::create(static_cast<u8 *>(opInfo_->inputAddr) + srcInitSlice0.offset, srcInitSlice0.size);
+    dstInit    = inputMem_.range(dstInitSlice0.offset, dstInitSlice0.size);
 
     const Slice &srcInitSlice1 = userMemInputSlicesOfDoubleRing_[ringIndex][initSlice1Idx * discontinuousSliceSize + discontinuousSliceIdx];
     srcSubInit
@@ -246,7 +244,7 @@ HcclResult AlignedReduceScatterAsymDoubleRing::MemcpyInitSlicesOnMainStreams(
         CHK_RET(MainWaitSub());
         CHK_RET(ExecutorBase::ExecEmptyTask(inputMem_, outputMem_, stream_, dispatcher_));
         CHK_RET(MainRecordSub());
-        CHK_RET(HcclD2DMemcpyAsync(dispatcher_, dstInit, srcInit, stream_));
+        // CHK_RET(HcclD2DMemcpyAsync(dispatcher_, dstInit, srcInit, stream_));
     } else {
         CHK_RET(LocalNotify::Post(subStreams_[0], dispatcher_, mainSignals_[0], profilerInput_.stage));
         CHK_RET(LocalNotify::Wait(subStreams_[0], dispatcher_, subSignals_[0], profilerInput_.stage));
