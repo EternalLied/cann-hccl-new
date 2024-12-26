@@ -29,9 +29,12 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::DoubleRingAllGather(
     HCCL_INFO("[CollAlignedAllGatherAsymDoubleRingExecutor][DoubleRingAllGather] DoubleRingAllGather starts");
     HcclResult ret = HCCL_SUCCESS;
     u32 ringNum = multRingsSliceZero.size();
-    CHK_RET(CheckCommSize(COMM_LEVEL0, ringNum));
-    // 拿到ring环映射关系
-    SubCommInfo outerZeroCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
+    // CHK_RET(CheckCommSize(COMM_LEVEL0, ringNum));
+    // // 拿到ring环映射关系
+    // SubCommInfo outerZeroCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
+    // 获取打平通信域
+    CHK_RET(CheckCommSize(COMM_COMBINE, COMM_INDEX_0 + 1));
+    SubCommInfo outerZeroCommInfo = GetSubCommInfo(COMM_COMBINE, COMM_INDEX_0);
     auto nicList = topoAttr_.nicList;
     std::vector<std::vector<u32>> multiRingsOrder =
         GetRingsOrderByTopoType(outerZeroCommInfo.localRankSize, topoType_, nicList);
@@ -96,19 +99,24 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::KernelRun(const OpParam &
         HCCL_ERROR("[CollAlignedAllGatherAsymDoubleRingExecutor][KernelRun]errNo[0x%016llx] datatype[%s] is invalid",
             HCCL_ERROR_CODE(HCCL_E_PARA), GetDataTypeEnumStr(param.DataDes.dataType).c_str()), HCCL_E_PARA);
 
-    CHK_RET(CheckCommSize(COMM_LEVEL0, COMM_INDEX_0 + 1));
-    SubCommInfo outerCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
-    u32 level0ServerIndex = outerCommInfo.localRank;
-    CHK_RET(CheckCommSize(COMM_LEVEL1, level0ServerIndex + 1));
-    SubCommInfo innerCommInfo = GetSubCommInfo(COMM_LEVEL1, level0ServerIndex);
-    CHK_RET(CheckCommSize(COMM_LEVEL2, COMM_INDEX_0 + 1));
-    SubCommInfo level2CommInfo = GetSubCommInfo(COMM_LEVEL2, COMM_INDEX_0);
+    // CHK_RET(CheckCommSize(COMM_LEVEL0, COMM_INDEX_0 + 1));
+    // SubCommInfo outerCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
+    // u32 level0ServerIndex = outerCommInfo.localRank;
+    // CHK_RET(CheckCommSize(COMM_LEVEL1, level0ServerIndex + 1));
+    // SubCommInfo innerCommInfo = GetSubCommInfo(COMM_LEVEL1, level0ServerIndex);
+    // CHK_RET(CheckCommSize(COMM_LEVEL2, COMM_INDEX_0 + 1));
+    // SubCommInfo level2CommInfo = GetSubCommInfo(COMM_LEVEL2, COMM_INDEX_0);
+    // 获取打平通信域
+    CHK_RET(CheckCommSize(COMM_COMBINE, COMM_INDEX_0 + 1));
+    SubCommInfo outerCommInfo = GetSubCommInfo(COMM_COMBINE, COMM_INDEX_0);
 
     //  第一步，将数据从input内存拷贝到output内存的对应位置
-    u32 level1ServerIndex = innerCommInfo.localRank;
+    // u32 level1ServerIndex = innerCommInfo.localRank;
     u32 level0RankSize = outerCommInfo.localRankSize;
-    u32 level1RankSize = innerCommInfo.localRankSize;
-    u32 level2RankSize = level2CommInfo.localRankSize;
+    // u32 level1RankSize = innerCommInfo.localRankSize;
+    // u32 level2RankSize = level2CommInfo.localRankSize;
+    u32 level1RankSize = 1;
+    u32 level2RankSize = 1;
 
     u64 inputMemSize = execMem.inputMem.size();
     u64 dstMemOffset = topoAttr_.userRank * inputMemSize;
@@ -137,86 +145,86 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::KernelRun(const OpParam &
     } else {
         opInfoPtr = &opInfo;
         // 先做server间算法，带有消减拷贝场景数据需要从user input取，拷贝到ccl output上
-        if (level1RankSize > 1 || level2RankSize > 1) {
-            DeviceMem srcMem = DeviceMem::create(static_cast<u8 *>(execMem.inputPtr), inputMemSize);
-            ret = HcclD2DMemcpyAsync(dispatcher_, dstMem, srcMem, const_cast<Stream&>(param.stream));
-            CHK_PRT_RET(ret != HCCL_SUCCESS,
-                HCCL_ERROR("[CollAlignedAllGatherAsymDoubleRingExecutor][KernelRun]all gather double "
-                    "ring user memcpy Failed, Offset[%llu], Size[%llu]", dstMemOffset, inputMemSize), ret);
-        }
+        // if (level1RankSize > 1 || level2RankSize > 1) {
+        //     DeviceMem srcMem = DeviceMem::create(static_cast<u8 *>(execMem.inputPtr), inputMemSize);
+        //     ret = HcclD2DMemcpyAsync(dispatcher_, dstMem, srcMem, const_cast<Stream&>(param.stream));
+        //     CHK_PRT_RET(ret != HCCL_SUCCESS,
+        //         HCCL_ERROR("[CollAlignedAllGatherAsymDoubleRingExecutor][KernelRun]all gather double "
+        //             "ring user memcpy Failed, Offset[%llu], Size[%llu]", dstMemOffset, inputMemSize), ret);
+        // }
     }
-    if (level2RankSize > 1) {
-        std::unique_ptr<ExecutorBase> level2AGExecutor;
-        level2AGExecutor.reset(new (std::nothrow) AllGatherRing(dispatcher_));
-        HCCL_INFO("allgather ring: using ring algo inter-server.");
-        CHK_SMART_PTR_NULL(level2AGExecutor);
+    // if (level2RankSize > 1) {
+    //     std::unique_ptr<ExecutorBase> level2AGExecutor;
+    //     level2AGExecutor.reset(new (std::nothrow) AllGatherRing(dispatcher_));
+    //     HCCL_INFO("allgather ring: using ring algo inter-server.");
+    //     CHK_SMART_PTR_NULL(level2AGExecutor);
 
-        std::vector<Slice> level2DataSegsSlice;
-        for (u32 i = 0; i < level2RankSize; i++) {
-            Slice sliceTemp;
-            sliceTemp.size = inputMemSize;
-            sliceTemp.offset = i * level1RankSize * level0RankSize * inputMemSize +
-                (level1ServerIndex * level0RankSize + level0ServerIndex) * inputMemSize;
-            level2DataSegsSlice.push_back(sliceTemp);
-        }
-        CHK_RET(level2AGExecutor->Prepare(execMem.outputMem, execMem.outputMem, execMem.inputMem, execMem.count,
-            param.DataDes.dataType, param.stream,
-            HCCL_REDUCE_RESERVED, INVALID_VALUE_RANKID, level2DataSegsSlice, 0));
+    //     std::vector<Slice> level2DataSegsSlice;
+    //     for (u32 i = 0; i < level2RankSize; i++) {
+    //         Slice sliceTemp;
+    //         sliceTemp.size = inputMemSize;
+    //         sliceTemp.offset = i * level1RankSize * level0RankSize * inputMemSize +
+    //             (level1ServerIndex * level0RankSize + level0ServerIndex) * inputMemSize;
+    //         level2DataSegsSlice.push_back(sliceTemp);
+    //     }
+    //     CHK_RET(level2AGExecutor->Prepare(execMem.outputMem, execMem.outputMem, execMem.inputMem, execMem.count,
+    //         param.DataDes.dataType, param.stream,
+    //         HCCL_REDUCE_RESERVED, INVALID_VALUE_RANKID, level2DataSegsSlice, 0));
 
-        CHK_RET(level2AGExecutor->RegisterProfiler((
-            level2RankSize << PROF_RANKSIZE_OFFSET_OF_PLANEID) + level2CommInfo.localRank,
-            PROF_STAGE_0, HCCL_EXEC_STEP_NOT_SET, param.stream));
+    //     CHK_RET(level2AGExecutor->RegisterProfiler((
+    //         level2RankSize << PROF_RANKSIZE_OFFSET_OF_PLANEID) + level2CommInfo.localRank,
+    //         PROF_STAGE_0, HCCL_EXEC_STEP_NOT_SET, param.stream));
 
-        CHK_RET(RunTemplate(level2AGExecutor, level2CommInfo));
-        HCCL_INFO("allgather double ring [superpod] level2 allgather run success");
-    }
-    if (level1RankSize > 1) {
-        // 计算slice, 不同超节点相同slice
-        std::vector<Slice> level1DataSegsSlice;
-        for (u32 j = 0; j < level1RankSize; j++) {
-            for (u32 i = 0; i < level2RankSize; i++) {
-                Slice level1Slice;
-                level1Slice.size = inputMemSize;
-                level1Slice.offset =
-                    (j * level0RankSize +  i * level1RankSize * level0RankSize + level0ServerIndex) * inputMemSize;
-                level1DataSegsSlice.push_back(level1Slice);
-            }
-        }
+    //     CHK_RET(RunTemplate(level2AGExecutor, level2CommInfo));
+    //     HCCL_INFO("allgather double ring [superpod] level2 allgather run success");
+    // }
+    // if (level1RankSize > 1) {
+    //     // 计算slice, 不同超节点相同slice
+    //     std::vector<Slice> level1DataSegsSlice;
+    //     for (u32 j = 0; j < level1RankSize; j++) {
+    //         for (u32 i = 0; i < level2RankSize; i++) {
+    //             Slice level1Slice;
+    //             level1Slice.size = inputMemSize;
+    //             level1Slice.offset =
+    //                 (j * level0RankSize +  i * level1RankSize * level0RankSize + level0ServerIndex) * inputMemSize;
+    //             level1DataSegsSlice.push_back(level1Slice);
+    //         }
+    //     }
         
-        if (GetExternalInputEnableRdmaSdmaConcurrent() && (inputMemSize >= HCCL_SPLIT_SIZE_INTER_SERVER) 
-            && !aicpuUnfoldMode_) {
-            u32 syncTrans = (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) ? BEST_SPLIT_VALUE_DR :
-                BEST_SPLIT_VALUE_SR;
-            CHK_RET(Level1AllGatherConcurrent(execMem.inputMem, execMem.outputMem, execMem.count, param.DataDes.dataType,
-                param.stream, PROF_STAGE_1, level1DataSegsSlice, syncTrans));
-        } else {
-            std::unique_ptr<ExecutorBase> level1AGExecutor;
-            if (UseInterServerRingAlgo(algType_)) {
-                level1AGExecutor.reset(new (std::nothrow) AllGatherRing(dispatcher_));
-                HCCL_INFO("allgather ring: using ring algo inter-server.");
-            } else if (UseInterServerNBAlgo(algType_)) {
-                level1AGExecutor.reset(new (std::nothrow) AllGatherNB(dispatcher_));
-                HCCL_INFO("allgather ring: using nonuniform-bruck algo inter-server.");
-            } else if (UseInterServerNHRAlgo(algType_)) {
-                level1AGExecutor.reset(new (std::nothrow) AllGatherNHR(dispatcher_));
-                HCCL_INFO("allgather ring: using nonuniform-hierarchical-ring algo inter-server.");
-            } else {
-                HCCL_ERROR("allgather ring: algType[%u] is not supported.", algType_);
-                return HCCL_E_NOT_SUPPORT;
-            }
-            CHK_SMART_PTR_NULL(level1AGExecutor);
-            CHK_RET(level1AGExecutor->Prepare(execMem.outputMem, execMem.outputMem, execMem.inputMem, execMem.count,
-                param.DataDes.dataType, param.stream,
-                HCCL_REDUCE_RESERVED, INVALID_VALUE_RANKID, level1DataSegsSlice, 0));
+    //     if (GetExternalInputEnableRdmaSdmaConcurrent() && (inputMemSize >= HCCL_SPLIT_SIZE_INTER_SERVER) 
+    //         && !aicpuUnfoldMode_) {
+    //         u32 syncTrans = (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) ? BEST_SPLIT_VALUE_DR :
+    //             BEST_SPLIT_VALUE_SR;
+    //         CHK_RET(Level1AllGatherConcurrent(execMem.inputMem, execMem.outputMem, execMem.count, param.DataDes.dataType,
+    //             param.stream, PROF_STAGE_1, level1DataSegsSlice, syncTrans));
+    //     } else {
+    //         std::unique_ptr<ExecutorBase> level1AGExecutor;
+    //         if (UseInterServerRingAlgo(algType_)) {
+    //             level1AGExecutor.reset(new (std::nothrow) AllGatherRing(dispatcher_));
+    //             HCCL_INFO("allgather ring: using ring algo inter-server.");
+    //         } else if (UseInterServerNBAlgo(algType_)) {
+    //             level1AGExecutor.reset(new (std::nothrow) AllGatherNB(dispatcher_));
+    //             HCCL_INFO("allgather ring: using nonuniform-bruck algo inter-server.");
+    //         } else if (UseInterServerNHRAlgo(algType_)) {
+    //             level1AGExecutor.reset(new (std::nothrow) AllGatherNHR(dispatcher_));
+    //             HCCL_INFO("allgather ring: using nonuniform-hierarchical-ring algo inter-server.");
+    //         } else {
+    //             HCCL_ERROR("allgather ring: algType[%u] is not supported.", algType_);
+    //             return HCCL_E_NOT_SUPPORT;
+    //         }
+    //         CHK_SMART_PTR_NULL(level1AGExecutor);
+    //         CHK_RET(level1AGExecutor->Prepare(execMem.outputMem, execMem.outputMem, execMem.inputMem, execMem.count,
+    //             param.DataDes.dataType, param.stream,
+    //             HCCL_REDUCE_RESERVED, INVALID_VALUE_RANKID, level1DataSegsSlice, 0));
 
-            CHK_RET(level1AGExecutor->RegisterProfiler((
-                level1RankSize << PROF_RANKSIZE_OFFSET_OF_PLANEID) + level2CommInfo.localRank,
-                PROF_STAGE_1, HCCL_EXEC_STEP_NOT_SET, param.stream));
+    //         CHK_RET(level1AGExecutor->RegisterProfiler((
+    //             level1RankSize << PROF_RANKSIZE_OFFSET_OF_PLANEID) + level2CommInfo.localRank,
+    //             PROF_STAGE_1, HCCL_EXEC_STEP_NOT_SET, param.stream));
 
-            CHK_RET(RunTemplate(level1AGExecutor, innerCommInfo));
-            HCCL_INFO("allgather double ring [superpod] level1 allgather run success");
-        }
-    }
+    //         CHK_RET(RunTemplate(level1AGExecutor, innerCommInfo));
+    //         HCCL_INFO("allgather double ring [superpod] level1 allgather run success");
+    //     }
+    // }
     // 节点内做all gather double ring
     std::vector<Slice> dataSegsSlice;
     std::vector<std::vector<Slice>> multRingsSliceZero; // 数据基于该rank上环0的偏移
