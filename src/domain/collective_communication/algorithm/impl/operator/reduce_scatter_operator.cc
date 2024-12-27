@@ -191,11 +191,11 @@ HcclResult ReduceScatterOperator::SelectAlgfor91093(const OpParam& param, std::s
         } else {
             if (GetExternalInputHcclAlgoConfig(HcclCMDType::HCCL_CMD_REDUCE_SCATTER)[HCCL_ALGO_LEVEL_0] ==
                 HcclAlgoType::HCCL_ALGO_TYPE_FAST_DOUBLE_RING) {
-                // algName = "ReduceScatterFastDoubleRingFor91093Executor";
-                algName = "AlignedReduceScatterAsymDoubleRingExecutor";
+                algName = "ReduceScatterFastDoubleRingFor91093Executor";
+                // algName = "AlignedReduceScatterAsymDoubleRingExecutor";
             } else {
-                // algName = "AlignedReduceScatterDoubleRingFor91093Executor";
-                algName = "AlignedReduceScatterAsymDoubleRingExecutor";
+                algName = "AlignedReduceScatterDoubleRingFor91093Executor";
+                // algName = "AlignedReduceScatterAsymDoubleRingExecutor";
             }
         }
     } else {
@@ -218,8 +218,8 @@ HcclResult ReduceScatterOperator::SelectAlgfor91093(const OpParam& param, std::s
             HCCL_ERROR("[ReduceScatterOperator][SelectAlgfor91093]errNo[0x%016llx] tag[%s], ReduceScatter set inter "\
                 "server nhr algo failed", HCCL_ERROR_CODE(ret), param.tag.c_str()), ret);
     }
-    algName = "AlignedReduceScatterAsymDoubleRingExecutor";
-    algName = "AlignedReduceScatterDoubleRingFor91093Executor";
+    // algName = "AlignedReduceScatterAsymDoubleRingExecutor";
+    // algName = "AlignedReduceScatterDoubleRingFor91093Executor";
     HCCL_INFO("[SelectAlgfor91093] reduce_scatter SelectAlgfor91093 is algName [%s]", algName.c_str());
     return HCCL_SUCCESS;
 }
