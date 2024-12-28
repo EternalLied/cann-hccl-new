@@ -228,7 +228,10 @@ HcclResult AlltoAllOperator::SelectAlgforAlltoAll(const OpParam& param, std::str
     } else if (SatisfyIntraSuperPod(deviceType_, userRankSize_, useSuperPodMode_, superPodNum_) ||
         useOneLevelAlgorithm || isAllRankSamePlane_ || isSingleDeviceModuleP2p || multiModuleDiffDeviceNumMode_ ||
         multiSuperPodDiffServerNumMode_) {
-        algName = "RunAlltoAllVFullMesh";   //910B卡数不一致走这
+            
+        algName = "RunAlltoAllVStaged";
+        
+        // algName = "RunAlltoAllVFullMesh";   //910B卡数不一致走这
     } else {
         algName = "RunAlltoAllVStaged";
     }

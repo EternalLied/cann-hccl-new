@@ -294,7 +294,8 @@ bool IsSupportDirectFullmeshForAlltoallv(const OpParam& param, DevType deviceTyp
     }
     HCCL_DEBUG("[IsSupportDirectFullmeshForAlltoallv]isDevice91093[%u], isOpbase[%u], isHCCS[%u], isSatisfyBuffer[%u]",
         isDeviceType, isOpbase, isHCCS, isSatisfyBuffer);
-    return isDeviceType && isOpbase && isHCCS && isSatisfyBuffer;
+    // return isDeviceType && isOpbase && isHCCS && isSatisfyBuffer;
+    return false;
 }
 
 bool SatisfyIntraSuperPod(DevType deviceType, u32 rankSize, bool useSuperPodMode, u32 superPodNum)
