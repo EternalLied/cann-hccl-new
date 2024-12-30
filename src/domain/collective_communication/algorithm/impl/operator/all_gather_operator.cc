@@ -175,8 +175,8 @@ HcclResult AllGatherOperator::SelectAlgfor91093(const OpParam& param, std::strin
                     "nhr algo failed", HCCL_ERROR_CODE(ret), param.tag.c_str()), ret);
         }
         if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) {
-            algName = "AlignedAllGatherDoubleRingFor91093Executor";
-            // algName = "AlignedAllGatherAsymDoubleRingExecutor";
+            // algName = "AlignedAllGatherDoubleRingFor91093Executor";
+            algName = "AlignedAllGatherAsymDoubleRingExecutor";
         } else if (topoType_ == TopoType::TOPO_TYPE_NP_SINGLE_RING){
             algName = "AllGatherRingFor91093Executor";
         } else {
@@ -184,7 +184,7 @@ HcclResult AllGatherOperator::SelectAlgfor91093(const OpParam& param, std::strin
         }
     }
     HCCL_INFO("[SelectAlgfor91093] all_gather SelectAlgfor91093 is algName [%s]", algName.c_str());
-    algName = "AllGatherDoubleRingAsymExecutor";
+    // algName = "AllGatherDoubleRingAsymExecutor";
     // algName = "AllGatherDoubleRingConcurrentExecutor";
     // algName = "AlignedAllGatherDoubleRingFor91093Executor";
     // algName = "AlignedAllGatherAsymDoubleRingExecutor";
