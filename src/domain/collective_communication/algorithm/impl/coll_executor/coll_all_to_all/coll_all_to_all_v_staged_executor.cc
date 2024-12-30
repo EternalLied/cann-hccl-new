@@ -49,19 +49,22 @@ HcclResult CollRunAlltoAllVStaged::ParallelTaskLoaderProcess(const std::string &
 HcclResult CollRunAlltoAllVStaged::CalcStreamNum(u32& streamNum)
 {
     streamNum = 0U;
-    if (FullmeshPairwiseSatisfyHighPerfAlltoallMeshCondition(topoAttr_.deviceType,
-        topoAttr_.userRankSize, topoAttr_.useSuperPodMode)) {
-        streamNum = topoAttr_.meshAggregationRankSize - 1;
-    } else {
-        if (workflowMode_ != HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE || isAlltoAllZCopyMode_) {
-            if ((GetExternalInputHcclAlgoConfig()[0] != HcclAlgoType::HCCL_ALGO_TYPE_PAIRWISE ||
-                GetExternalInputHcclAlgoConfig()[1] != HcclAlgoType::HCCL_ALGO_TYPE_PAIRWISE) &&
-                const_cast<HcclTopoInfo &>(topoAttr_).pairLinkCounter[static_cast<u32>(
-                    LinkTypeInServer::HCCS_SW_TYPE)] == 0 && topoAttr_.meshAggregationRankSize != 1) {
-                    streamNum = topoAttr_.meshAggregationRankSize - MINORS_NUM_TWO;
-            }
-        }
-    }
+
+    streamNum = topoAttr_.meshAggregationRankSize - 1;
+
+    // if (FullmeshPairwiseSatisfyHighPerfAlltoallMeshCondition(topoAttr_.deviceType,
+    //     topoAttr_.userRankSize, topoAttr_.useSuperPodMode)) {
+    //     streamNum = topoAttr_.meshAggregationRankSize - 1;
+    // } else {
+    //     if (workflowMode_ != HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE || isAlltoAllZCopyMode_) {
+    //         if ((GetExternalInputHcclAlgoConfig()[0] != HcclAlgoType::HCCL_ALGO_TYPE_PAIRWISE ||
+    //             GetExternalInputHcclAlgoConfig()[1] != HcclAlgoType::HCCL_ALGO_TYPE_PAIRWISE) &&
+    //             const_cast<HcclTopoInfo &>(topoAttr_).pairLinkCounter[static_cast<u32>(
+    //                 LinkTypeInServer::HCCS_SW_TYPE)] == 0 && topoAttr_.meshAggregationRankSize != 1) {
+    //                 streamNum = topoAttr_.meshAggregationRankSize - MINORS_NUM_TWO;
+    //         }
+    //     }
+    // }
 
     HCCL_INFO("[CollRunAlltoAllVStaged][CalcStreamNum] tag[%s] streamNum[%u]", tag_.c_str(), streamNum);
     return HCCL_SUCCESS;
@@ -238,16 +241,16 @@ HcclResult CollRunAlltoAllVStaged::PrepareAlltoAllVStaged1(DeviceMem &sendBuf, D
             CHK_RET(HcclD2DMemcpyAsync(dispatcher_, execMem.inputMem, sendBuf, stream));
         }
         // 互联场景, alltoall暂不支持走fullmesh+pairwise
-        if ((GetExternalInputHcclAlgoConfig()[0] == HcclAlgoType::HCCL_ALGO_TYPE_PAIRWISE &&
-            GetExternalInputHcclAlgoConfig()[1] == HcclAlgoType::HCCL_ALGO_TYPE_PAIRWISE) ||
-            const_cast<HcclTopoInfo &>(topoAttr_).pairLinkCounter[static_cast<u32>(LinkTypeInServer::HCCS_SW_TYPE)] != 0 ||
-            topoAttr_.meshAggregationRankSize == 1) {
-            HCCL_INFO("Running alltoallv Staged Pairwise intra Server");
-            alltoallOuter.reset(new (std::nothrow)AlltoAllVStagedPairwise(dispatcher_, stream));
-            CHK_SMART_PTR_NULL(alltoallOuter);
-            CHK_RET(alltoallOuter->Prepare(inBuf, outBuf, sendAddrInfosIntra, recvAddrInfosIntra,
-                isAlltoAllZCopyMode_));
-        } else {
+        // if ((GetExternalInputHcclAlgoConfig()[0] == HcclAlgoType::HCCL_ALGO_TYPE_PAIRWISE &&
+        //     GetExternalInputHcclAlgoConfig()[1] == HcclAlgoType::HCCL_ALGO_TYPE_PAIRWISE) ||
+        //     const_cast<HcclTopoInfo &>(topoAttr_).pairLinkCounter[static_cast<u32>(LinkTypeInServer::HCCS_SW_TYPE)] != 0 ||
+        //     topoAttr_.meshAggregationRankSize == 1) {
+        //     HCCL_INFO("Running alltoallv Staged Pairwise intra Server");
+        //     alltoallOuter.reset(new (std::nothrow)AlltoAllVStagedPairwise(dispatcher_, stream));
+        //     CHK_SMART_PTR_NULL(alltoallOuter);
+        //     CHK_RET(alltoallOuter->Prepare(inBuf, outBuf, sendAddrInfosIntra, recvAddrInfosIntra,
+        //         isAlltoAllZCopyMode_));
+        // } else {
             HCCL_INFO("Running alltoallv Staged Mesh intra Server");
             if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OPS_KERNEL_INFO_LIB) {
                 CHK_RET(ActiveSlaveStreams(AlltoAllVParam_.stream));
@@ -265,7 +268,7 @@ HcclResult CollRunAlltoAllVStaged::PrepareAlltoAllVStaged1(DeviceMem &sendBuf, D
             CHK_SMART_PTR_NULL(alltoallOuter);
             CHK_RET(alltoallOuter->Prepare(inBuf, outBuf, sendAddrInfosIntra, recvAddrInfosIntra, isAlltoAllZCopyMode_,
                 algResResp_->slaveStreams));
-        }
+        // }
     }
     return HCCL_SUCCESS;
 }
