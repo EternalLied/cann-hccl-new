@@ -117,7 +117,6 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::DoubleRingAllGather(
     return HCCL_SUCCESS;
 }
 
-
 HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::RunIntraSeverAllGather(
     const std::string &tag, DeviceMem &inputMem, DeviceMem &outputMem,
     const u64 count, const HcclDataType &dataType, const std::vector<std::vector<Slice>> &multRingsSliceZero,
