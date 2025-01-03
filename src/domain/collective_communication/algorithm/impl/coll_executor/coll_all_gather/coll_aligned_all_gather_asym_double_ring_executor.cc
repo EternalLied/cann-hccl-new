@@ -19,6 +19,31 @@ CollAlignedAllGatherAsymDoubleRingExecutor::CollAlignedAllGatherAsymDoubleRingEx
     DMAReduceFlag_ = workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE;
 }
 
+HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport)
+{
+    TransportMemType inputType = TransportMemType::RESERVED;
+    TransportMemType outputType = TransportMemType::RESERVED;
+    CHK_RET(CalcTransportMemType(inputType, outputType));
+    CHK_RET(CalcCombineCommInfo(inputType, outputType, opTransport));
+    return HCCL_SUCCESS;
+}
+
+HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::CalcCombineCommInfo(TransportMemType inputType,
+    TransportMemType outputType,
+    std::vector<LevelNSubCommTransport>& opTransport)
+{
+    CommParaInfo commCombinePara(COMM_COMBINE, CommType::COMM_TAG_RING_COMBINED);
+    CHK_RET(CalcCommPlaneInfo(tag_, commCombinePara, opTransport[COMM_COMBINE], inputType, outputType));
+
+    LevelNSubCommTransport &commTransportLevel0 = opTransport[COMM_COMBINE];
+    for (u32 subCommIndex = 0; subCommIndex < commTransportLevel0.size(); subCommIndex++) {
+        for (auto &transportRequest : commTransportLevel0[subCommIndex].transportRequests) {
+            transportRequest.isUsedRdma = topoAttr_.isUsedRdmaMap.at(transportRequest.remoteUserRank);
+        }
+    }
+    return HCCL_SUCCESS;
+}
+
 HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::DoubleRingAllGather(
     const std::string &tag, DeviceMem inputMem, DeviceMem outputMem,
     const u64 count, const HcclDataType dataType, const std::vector<std::vector<Slice> > multRingsSliceZero,
