@@ -28,6 +28,21 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::CalcCommInfo(std::vector<
     return HCCL_SUCCESS;
 }
 
+HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::CalcTransportMemType(TransportMemType &inputType,
+    TransportMemType &outputType)
+{
+    if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
+        inputType = TransportMemType::CCL_INPUT;
+        outputType = TransportMemType::CCL_OUTPUT;
+    } else {
+        inputType = TransportMemType::PARAM_INPUT;
+        outputType = TransportMemType::PARAM_OUTPUT;
+    }
+    HCCL_INFO("[CollAllGatherRingFor91093Executor][CalcTransportMemType] tag[%s] inputType[%d], outputType[%d]",
+        tag_.c_str(), inputType, outputType);
+    return HCCL_SUCCESS;
+}
+
 HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::CalcCombineCommInfo(TransportMemType inputType,
     TransportMemType outputType,
     std::vector<LevelNSubCommTransport>& opTransport)
