@@ -76,6 +76,9 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::DoubleRingAllGather(
     CHK_RET(CheckCommSize(COMM_COMBINE, COMM_INDEX_0 + 1));
     SubCommInfo outerZeroCommInfo = GetSubCommInfo(COMM_COMBINE, COMM_INDEX_0);
     auto nicList = topoAttr_.nicList;
+
+    std::cout << "nicList: " << nicList << '\n';
+
     std::vector<std::vector<u32>> multiRingsOrder =
         GetRingsOrderByTopoType(outerZeroCommInfo.localRankSize, topoType_, nicList);
     // 生成两个ring上的userMemOut_上对应的slices
