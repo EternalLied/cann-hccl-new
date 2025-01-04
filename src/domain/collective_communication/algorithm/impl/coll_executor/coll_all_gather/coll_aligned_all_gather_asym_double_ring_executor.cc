@@ -77,7 +77,11 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::DoubleRingAllGather(
     SubCommInfo outerZeroCommInfo = GetSubCommInfo(COMM_COMBINE, COMM_INDEX_0);
     auto nicList = topoAttr_.nicList;
 
-    std::cout << "nicList: " << nicList << '\n';
+    std::cout << "nicList: ";
+    for (auto id : nicList) {
+        std::cout << id << ' ';
+    }
+    std::cout << std::endl;
 
     std::vector<std::vector<u32>> multiRingsOrder =
         GetRingsOrderByTopoType(outerZeroCommInfo.localRankSize, topoType_, nicList);
