@@ -78,7 +78,7 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::DoubleRingAllGather(
     // auto nicList = topoAttr_.nicList;
     std::vector<u32> nicList;
     for (int i = 0; i < 32; i++) {
-        vec.push_back(i);
+        nicList.push_back(i);
     }
 
     std::cout << "nicList: ";
