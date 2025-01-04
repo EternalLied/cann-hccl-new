@@ -75,7 +75,11 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::DoubleRingAllGather(
     // 获取打平通信域
     CHK_RET(CheckCommSize(COMM_COMBINE, COMM_INDEX_0 + 1));
     SubCommInfo outerZeroCommInfo = GetSubCommInfo(COMM_COMBINE, COMM_INDEX_0);
-    auto nicList = topoAttr_.nicList;
+    // auto nicList = topoAttr_.nicList;
+    std::vector<u32> nicList;
+    for (int i = 0; i < 32; i++) {
+        vec.push_back(i);
+    }
 
     std::cout << "nicList: ";
     for (auto id : nicList) {
