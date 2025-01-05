@@ -267,7 +267,8 @@ HcclResult AllGatherHalfRingDirect::RunAllGather(const u32 rank, const u32 rankS
             txMems.emplace_back(TxMemoryInfo{UserMemType::OUTPUT_MEM, txSliceVector[sliceIdx].offset + baseOffset_,
                 src.ptr(), txSliceVector[sliceIdx].size});
             DeviceMem dst;
-            if (isSdma_ && step == rankSize - DMA_REDUCE_TWO_OFFSET) {
+            u32 DMA_REDUCE_ASYM_OFFSET = rankSize / 2 + 1;
+            if (isSdma_ && step == rankSize - DMA_REDUCE_ASYM_OFFSET) {
                 HCCL_DEBUG(
                 "DMAReduce(sdma) MemcpyAsync operation: step[%u] stream[main], dst rank[%u] starts to rcv "
                 "offset[%llu] size[%llu] at userMemOutput_",
@@ -280,7 +281,7 @@ HcclResult AllGatherHalfRingDirect::RunAllGather(const u32 rank, const u32 rankS
                     "at outputMem_",
                     step, userRank_, rxSliceVector[sliceIdx].offset, rxSliceVector[sliceIdx].size);
                 dst = outputMem_.range(rxSliceVector[sliceIdx].offset, rxSliceVector[sliceIdx].size);
-                if (!isSdma_ && step == rankSize - DMA_REDUCE_TWO_OFFSET) {
+                if (!isSdma_ && step == rankSize - DMA_REDUCE_ASYM_OFFSET) {
                     HCCL_DEBUG("DMAReduce(rdma) record final addr");
                     finalSrc.push_back(outputMem_.range(rxSliceVector[sliceIdx].offset, rxSliceVector[sliceIdx].size));
                     finalDst.push_back(DeviceMem::create(static_cast<u8 *>(opInfo_->outputAddr) + 
