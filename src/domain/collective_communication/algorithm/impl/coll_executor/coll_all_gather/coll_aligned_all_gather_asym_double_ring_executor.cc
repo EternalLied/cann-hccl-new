@@ -47,10 +47,10 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::CalcCombineCommInfo(Trans
     TransportMemType outputType,
     std::vector<LevelNSubCommTransport>& opTransport)
 {
-    CommParaInfo commCombinePara(COMM_COMBINE, CommType::COMM_TAG_RING_COMBINED);
-    CHK_RET(CalcCommPlaneInfo(tag_, commCombinePara, opTransport[COMM_COMBINE], inputType, outputType));
+    CommParaInfo commCombinePara(COMM_COMBINE_ORDER, CommType:: CommType::COMM_TAG_MESH);
+    CHK_RET(CalcCommPlaneInfo(tag_, commCombinePara, opTransport[COMM_COMBINE_ORDER], inputType, outputType));
 
-    LevelNSubCommTransport &commTransportLevel0 = opTransport[COMM_COMBINE];
+    LevelNSubCommTransport &commTransportLevel0 = opTransport[COMM_COMBINE_ORDER];
     for (u32 subCommIndex = 0; subCommIndex < commTransportLevel0.size(); subCommIndex++) {
         for (auto &transportRequest : commTransportLevel0[subCommIndex].transportRequests) {
             transportRequest.isUsedRdma = topoAttr_.isUsedRdmaMap.at(transportRequest.remoteUserRank);
@@ -73,8 +73,8 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::DoubleRingAllGather(
     // // 拿到ring环映射关系
     // SubCommInfo outerZeroCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
     // 获取打平通信域
-    CHK_RET(CheckCommSize(COMM_COMBINE, COMM_INDEX_0 + 1));
-    SubCommInfo outerZeroCommInfo = GetSubCommInfo(COMM_COMBINE, COMM_INDEX_0);
+    CHK_RET(CheckCommSize(COMM_COMBINE_ORDER, COMM_INDEX_0 + 1));
+    SubCommInfo outerZeroCommInfo = GetSubCommInfo(COMM_COMBINE_ORDER, COMM_INDEX_0);
     // auto nicList = topoAttr_.nicList;
     std::vector<u32> nicList;
     for (int i = 0; i < 32; i++) {
