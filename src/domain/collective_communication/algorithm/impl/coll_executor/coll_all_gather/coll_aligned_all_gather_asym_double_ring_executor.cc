@@ -47,7 +47,7 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::CalcCombineCommInfo(Trans
     TransportMemType outputType,
     std::vector<LevelNSubCommTransport>& opTransport)
 {
-    CommParaInfo commCombinePara(COMM_COMBINE_ORDER, CommType:: CommType::COMM_TAG_MESH);
+    CommParaInfo commCombinePara(COMM_COMBINE_ORDER, CommType::COMM_TAG_MESH);
     CHK_RET(CalcCommPlaneInfo(tag_, commCombinePara, opTransport[COMM_COMBINE_ORDER], inputType, outputType));
 
     LevelNSubCommTransport &commTransportLevel0 = opTransport[COMM_COMBINE_ORDER];
