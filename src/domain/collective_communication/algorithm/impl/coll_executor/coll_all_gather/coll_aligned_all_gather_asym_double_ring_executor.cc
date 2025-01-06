@@ -157,8 +157,8 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::KernelRun(const OpParam &
     // CHK_RET(CheckCommSize(COMM_LEVEL2, COMM_INDEX_0 + 1));
     // SubCommInfo level2CommInfo = GetSubCommInfo(COMM_LEVEL2, COMM_INDEX_0);
     // 获取打平通信域
-    CHK_RET(CheckCommSize(COMM_COMBINE, COMM_INDEX_0 + 1));
-    SubCommInfo outerCommInfo = GetSubCommInfo(COMM_COMBINE, COMM_INDEX_0);
+    CHK_RET(CheckCommSize(COMM_COMBINE_ORDER, COMM_INDEX_0 + 1));
+    SubCommInfo outerCommInfo = GetSubCommInfo(COMM_COMBINE_ORDER, COMM_INDEX_0);
 
     //  第一步，将数据从input内存拷贝到output内存的对应位置
     // u32 level1ServerIndex = innerCommInfo.localRank;
