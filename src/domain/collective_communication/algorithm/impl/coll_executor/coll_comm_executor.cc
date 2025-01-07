@@ -1668,7 +1668,7 @@ std::vector<std::vector<u32>>  CollCommExecutor::GetRingsOrderByTopoType(u32 ran
         multiRingOrder.push_back(tmpOuter1);
         multiRingOrder.push_back(tmpOuter2);
         multiRingOrder.push_back(tmpOuter3);
-    } else if (topoType == TopoType::TOPO_TYPE_NP_DOUBLE_RING) { // 2 ring 场景
+    } else if (topoType == TopoType::TOPO_TYPE_NP_DOUBLE_RING || topoType == TopoType::TOPO_TYPE_COMMON) { // 2 ring 场景
         std::vector<u32> tmpOuter0;   // 环0
         std::vector<u32> tmpOuter1;  // 环1
         std::vector<u32> rohOuter;

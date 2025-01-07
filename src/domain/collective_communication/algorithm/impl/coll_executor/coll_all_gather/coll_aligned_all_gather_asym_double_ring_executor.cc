@@ -182,7 +182,7 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::KernelRun(const OpParam &
         HCCL_REDUCE_RESERVED
     };
     HcomCollOpInfo *opInfoPtr = nullptr;
-    if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) {
+    if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING || topoType_ == TopoType::TOPO_TYPE_COMMON) {
         opInfoPtr = &graphModeOpInfo;
     }
 
