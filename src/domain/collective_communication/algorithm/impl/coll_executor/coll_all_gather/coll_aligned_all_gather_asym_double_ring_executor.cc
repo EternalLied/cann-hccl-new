@@ -80,6 +80,7 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::DoubleRingAllGather(
     for (int i = 0; i < outerZeroCommInfo.localRankSize; i++) {
         nicList.push_back(i);
     }
+    HCCL_INFO("outerZeroCommInfo.localRankSize");
 
     // std::cout << "nicList: ";
     // for (auto id : nicList) {
