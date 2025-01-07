@@ -218,7 +218,7 @@ HcclResult ReduceScatterOperator::SelectAlgfor91093(const OpParam& param, std::s
             HCCL_ERROR("[ReduceScatterOperator][SelectAlgfor91093]errNo[0x%016llx] tag[%s], ReduceScatter set inter "\
                 "server nhr algo failed", HCCL_ERROR_CODE(ret), param.tag.c_str()), ret);
     }
-    // algName = "AlignedReduceScatterAsymDoubleRingExecutor";
+    algName = "AlignedReduceScatterAsymDoubleRingExecutor";
     // algName = "AlignedReduceScatterDoubleRingFor91093Executor";
     HCCL_INFO("[SelectAlgfor91093] reduce_scatter SelectAlgfor91093 is algName [%s]", algName.c_str());
     return HCCL_SUCCESS;
