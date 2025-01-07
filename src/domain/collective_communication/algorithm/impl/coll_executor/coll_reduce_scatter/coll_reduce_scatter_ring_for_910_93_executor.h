@@ -24,7 +24,7 @@ private:
     /* *************** 资源计算 *************** */
     HcclResult CalcScratchMemSize(u64& scratchMemSize) override;
     HcclResult CalcStreamNum(u32& streamNum) override;
-    HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
+    virtual HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
     HcclResult CalcLevel0CommInfo(TransportMemType inputType,
         TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
