@@ -23,6 +23,46 @@ CollAlignedAllReduceAsymDoubleRingExecutor::CollAlignedAllReduceAsymDoubleRingEx
     }
 }
 
+HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport)
+{
+    TransportMemType inputType = TransportMemType::RESERVED;
+    TransportMemType outputType = TransportMemType::RESERVED;
+    CHK_RET(CalcTransportMemType(inputType, outputType));
+    CHK_RET(CalcCombineCommInfo(inputType, outputType, opTransport));
+    return HCCL_SUCCESS;
+}
+
+HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::CalcTransportMemType(TransportMemType &inputType,
+    TransportMemType &outputType)
+{
+    if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
+        inputType = TransportMemType::CCL_INPUT;
+        outputType = TransportMemType::CCL_OUTPUT;
+    } else {
+        inputType = TransportMemType::PARAM_INPUT;
+        outputType = TransportMemType::PARAM_OUTPUT;
+    }
+    HCCL_INFO("[CollAllGatherRingFor91093Executor][CalcTransportMemType] tag[%s] inputType[%d], outputType[%d]",
+        tag_.c_str(), inputType, outputType);
+    return HCCL_SUCCESS;
+}
+
+HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::CalcCombineCommInfo(TransportMemType inputType,
+    TransportMemType outputType,
+    std::vector<LevelNSubCommTransport>& opTransport)
+{
+    CommParaInfo commCombinePara(COMM_COMBINE_ORDER, CommType::COMM_TAG_MESH);
+    CHK_RET(CalcCommPlaneInfo(tag_, commCombinePara, opTransport[COMM_COMBINE_ORDER], inputType, outputType));
+
+    LevelNSubCommTransport &commTransportLevel0 = opTransport[COMM_COMBINE_ORDER];
+    for (u32 subCommIndex = 0; subCommIndex < commTransportLevel0.size(); subCommIndex++) {
+        for (auto &transportRequest : commTransportLevel0[subCommIndex].transportRequests) {
+            transportRequest.isUsedRdma = topoAttr_.isUsedRdmaMap.at(transportRequest.remoteUserRank);
+        }
+    }
+    return HCCL_SUCCESS;
+}
+
 HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::DoubleRingReduceScatter(const std::string &tag,
     DeviceMem inputMem, DeviceMem outputMem, const u64 count, const HcclDataType dataType,
     const HcclReduceOp reductionOp, const std::vector<std::vector<Slice>> multRingsSliceZero, Stream stream,
