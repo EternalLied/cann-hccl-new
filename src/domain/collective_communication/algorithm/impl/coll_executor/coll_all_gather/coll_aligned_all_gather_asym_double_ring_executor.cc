@@ -282,7 +282,7 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::KernelRun(const OpParam &
     CHK_RET(PrepareAllgatherSlice(level0RankSize, inputMemSize, dataSegsSlice));
 
     //  多环数据切分
-    if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) {
+    if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING || topoType_ == TopoType::TOPO_TYPE_COMMON) {
         // multRingsSliceZero = PrepareMultiRingSlice(dataSegsSlice, param.tag, false, topoAttr_.nicList);
         // 双环数据相同
         for (int i = 0; i < 2; ++i) {
