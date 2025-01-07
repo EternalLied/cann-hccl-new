@@ -20,6 +20,12 @@ public:
     ~CollAlignedReduceScatterAsymDoubleRingExecutor() = default;
 
 private:
+    /* *************** 资源计算 *************** */
+    HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
+    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
+    HcclResult CalcCombineCommInfo(TransportMemType inputType, TransportMemType outputType,
+    std::vector<LevelNSubCommTransport>& opTransport);
+
     /* *************** 算法编排 *************** */
     virtual HcclResult DoubleRingReduceScatter(
         const std::string &tag, DeviceMem inputMem, DeviceMem outputMem, const u64 count,

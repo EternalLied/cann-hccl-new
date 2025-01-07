@@ -18,6 +18,46 @@ CollAlignedReduceScatterAsymDoubleRingExecutor::CollAlignedReduceScatterAsymDoub
     DMAReduceFlag_ = (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE);
 }
 
+HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport)
+{
+    TransportMemType inputType = TransportMemType::RESERVED;
+    TransportMemType outputType = TransportMemType::RESERVED;
+    CHK_RET(CalcTransportMemType(inputType, outputType));
+    CHK_RET(CalcCombineCommInfo(inputType, outputType, opTransport));
+    return HCCL_SUCCESS;
+}
+
+HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::CalcTransportMemType(TransportMemType &inputType,
+    TransportMemType &outputType)
+{
+    if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
+        inputType = TransportMemType::CCL_INPUT;
+        outputType = TransportMemType::CCL_OUTPUT;
+    } else {
+        inputType = TransportMemType::PARAM_INPUT;
+        outputType = TransportMemType::PARAM_OUTPUT;
+    }
+    HCCL_INFO("[CollAllGatherRingFor91093Executor][CalcTransportMemType] tag[%s] inputType[%d], outputType[%d]",
+        tag_.c_str(), inputType, outputType);
+    return HCCL_SUCCESS;
+}
+
+HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::CalcCombineCommInfo(TransportMemType inputType,
+    TransportMemType outputType,
+    std::vector<LevelNSubCommTransport>& opTransport)
+{
+    CommParaInfo commCombinePara(COMM_COMBINE_ORDER, CommType::COMM_TAG_MESH);
+    CHK_RET(CalcCommPlaneInfo(tag_, commCombinePara, opTransport[COMM_COMBINE_ORDER], inputType, outputType));
+
+    LevelNSubCommTransport &commTransportLevel0 = opTransport[COMM_COMBINE_ORDER];
+    for (u32 subCommIndex = 0; subCommIndex < commTransportLevel0.size(); subCommIndex++) {
+        for (auto &transportRequest : commTransportLevel0[subCommIndex].transportRequests) {
+            transportRequest.isUsedRdma = topoAttr_.isUsedRdmaMap.at(transportRequest.remoteUserRank);
+        }
+    }
+    return HCCL_SUCCESS;
+}
+
 HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::DoubleRingReduceScatter(
     const std::string &tag, DeviceMem inputMem, DeviceMem outputMem,
     const u64 count, const HcclDataType dataType, const HcclReduceOp reductionOp,
@@ -30,17 +70,27 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::DoubleRingReduceScatt
         "[CollAlignedReduceScatterAsymDoubleRingExecutor][DoubleRingReduceScatter] DoubleRingReduceScatter starts");
     HcclResult ret = HCCL_SUCCESS;
     u32 ringNum = multRingsSliceZero.size();
-    CHK_RET(CheckCommSize(COMM_LEVEL0, ringNum));
+    // CHK_RET(CheckCommSize(COMM_LEVEL0, ringNum));
 
-    // 拿到ring环映射关系
-    SubCommInfo outerZeroCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
-    auto nicList = topoAttr_.nicList;
+    // // 拿到ring环映射关系
+    // SubCommInfo outerZeroCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
+    // auto nicList = topoAttr_.nicList;
+
+    CHK_RET(CheckCommSize(COMM_COMBINE_ORDER, COMM_INDEX_0 + 1));
+    SubCommInfo outerZeroCommInfo = GetSubCommInfo(COMM_COMBINE_ORDER, COMM_INDEX_0);
+    // auto nicList = topoAttr_.nicList;
+    std::vector<u32> nicList;
+    for (int i = 0; i < 32; i++) {
+        nicList.push_back(i);
+    }
+
     std::vector<std::vector<u32>> multiRingsOrder =
         GetRingsOrderByTopoType(outerZeroCommInfo.localRankSize, topoType_, nicList);
 
     u64 reduceAttr = GetReduceAttr(inputMem, outputMem, dataType, reductionOp);
 
-    SubCommInfo outerRingCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
+    // SubCommInfo outerRingCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
+    SubCommInfo outerRingCommInfo = GetSubCommInfo(COMM_COMBINE_ORDER, COMM_INDEX_0);
     // 生成两个ring上的userMemIn_上对应的slices
     std::vector<std::vector<Slice>> userMemInputSlicesOfDoubleRing;
     CHK_RET(CollectMultiRingsUserMemSlices(ringNum, dataType,
@@ -163,8 +213,11 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::KernelRun(const OpPar
     u32 perDataSize = 0;
     CHK_RET(SalGetDataTypeSize(param.DataDes.dataType, perDataSize));
 
-    CHK_RET(CheckCommSize(COMM_LEVEL0, COMM_INDEX_0 + 1));
-    SubCommInfo outerCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
+    // CHK_RET(CheckCommSize(COMM_LEVEL0, COMM_INDEX_0 + 1));
+    // SubCommInfo outerCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
+    // 获取打平通信域
+    CHK_RET(CheckCommSize(COMM_COMBINE_ORDER, COMM_INDEX_0 + 1));
+    SubCommInfo outerCommInfo = GetSubCommInfo(COMM_COMBINE_ORDER, COMM_INDEX_0);
 
     u32 ringNum;
     if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) {
@@ -178,19 +231,21 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::KernelRun(const OpPar
     u32 commIndex = outerCommInfo.localRank;
     commIndex = RefreshCommIdx(commIndex, topoAttr_.nicList, topoAttr_.devicePhyId);
 
-    CHK_RET(CheckCommSize(COMM_LEVEL1, commIndex + 1));
-    SubCommInfo innerCommInfo = GetSubCommInfo(COMM_LEVEL1, commIndex);
+    // CHK_RET(CheckCommSize(COMM_LEVEL1, commIndex + 1));
+    // SubCommInfo innerCommInfo = GetSubCommInfo(COMM_LEVEL1, commIndex);
 
-    CHK_RET(CheckCommSize(COMM_LEVEL2, COMM_INDEX_0 + 1));
-    SubCommInfo level2CommInfo = GetSubCommInfo(COMM_LEVEL2, COMM_INDEX_0);
-    u32 level2RankSize = level2CommInfo.localRankSize;
+    // CHK_RET(CheckCommSize(COMM_LEVEL2, COMM_INDEX_0 + 1));
+    // SubCommInfo level2CommInfo = GetSubCommInfo(COMM_LEVEL2, COMM_INDEX_0);
+    // u32 level2RankSize = level2CommInfo.localRankSize;
 
     std::vector<Slice> dataSegsSlice;   // 数据分成ranksize份，每份的起始偏移和大小
     std::vector<std::vector<Slice>> multiStreamSlice; // 每个stream使用的数据基于用户buffer的偏移
 
     // 节点内reduce scatter
     CHK_RET(ActiveSlaveStreams(param.stream));
-    u32 innerRankSize = innerCommInfo.localRankSize;
+    // u32 innerRankSize = innerCommInfo.localRankSize;
+    u32 innerRankSize = 1;
+    u32 level2RankSize = 1;
 
     // 计算slice
     std::vector<std::vector<Slice>> level0DataSegsSlice;
