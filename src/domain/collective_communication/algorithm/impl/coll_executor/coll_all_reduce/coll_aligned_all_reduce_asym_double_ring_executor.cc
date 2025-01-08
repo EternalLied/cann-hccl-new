@@ -74,17 +74,28 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::DoubleRingReduceScatter(c
         "[CollAlignedAllReduceAsymDoubleRingExecutor][DoubleRingReduceScatter] DoubleRingReduceScatter starts");
     HcclResult ret = HCCL_SUCCESS;
     u32 ringNum = multRingsSliceZero.size();
-    CHK_RET(CheckCommSize(COMM_LEVEL0, ringNum));
+    // CHK_RET(CheckCommSize(COMM_LEVEL0, ringNum));
 
-    // 拿到ring环映射关系
-    SubCommInfo outerZeroCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
-    auto nicList = topoAttr_.nicList;
+    // // 拿到ring环映射关系
+    // SubCommInfo outerZeroCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
+    // auto nicList = topoAttr_.nicList;
+
+    CHK_RET(CheckCommSize(COMM_COMBINE_ORDER, COMM_INDEX_0 + 1));
+    SubCommInfo outerZeroCommInfo = GetSubCommInfo(COMM_COMBINE_ORDER, COMM_INDEX_0);
+    // auto nicList = topoAttr_.nicList;
+    std::vector<u32> nicList;
+    for (int i = 0; i < outerZeroCommInfo.localRankSize; i++) {
+        nicList.push_back(i);
+    }
+    HCCL_INFO("outerZeroCommInfo.localRankSize");
+
     std::vector<std::vector<u32>> multiRingsOrder =
         GetRingsOrderByTopoType(outerZeroCommInfo.localRankSize, topoType_, nicList);
 
     u64 reduceAttr = GetReduceAttr(inputMem, outputMem, dataType, reductionOp);
 
-    SubCommInfo outerRingCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
+    // SubCommInfo outerRingCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
+    SubCommInfo outerRingCommInfo = GetSubCommInfo(COMM_COMBINE_ORDER, COMM_INDEX_0);
     // 生成两个ring上的userMemIn_上对应的slices
     std::vector<std::vector<Slice>> userMemInputSlicesOfDoubleRing;
     CHK_RET(CollectMultiRingsUserMemSlices(ringNum, dataType,
