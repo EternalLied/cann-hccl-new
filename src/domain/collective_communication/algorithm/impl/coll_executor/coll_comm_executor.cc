@@ -1856,6 +1856,49 @@ std::vector<std::vector<Slice> > CollCommExecutor::PrepareMultiRingSlice(const s
     return mutliRingsSlices;
 }
 
+std::vector<std::vector<Slice>> CollCommExecutor::ASYMMultiRingSlicePrepare(u32 ringNum, u32 sliceNum,
+    bool useInlineReduce, DeviceMem& outputMem, std::vector<Slice>& dataSegsSlice, const std::string &tag)
+{
+    std::vector<std::vector<Slice>> multiStreamSlice;
+    u64 outputMenSize = outputMem.size();
+    dataSegsSlice.clear();
+    Slice sliceTemp;
+    for (u32 i = 0; i < sliceNum; i++) {    // 根据数据量算每个环上数据的偏移和大小
+        sliceTemp.size = outputMenSize;
+        sliceTemp.offset = outputMenSize * i;
+        dataSegsSlice.push_back(sliceTemp);
+    }
+
+    // 再将每个 slice 划分为 ringNum 份
+    if (ringNum == OUTER_PLANE_NUM_IN_8PRING) {
+        // 双环数据相同
+            for(int i=0;i<2;++i){
+                multiStreamSlice.push_back(dataSegsSlice);
+            }
+
+            std::vector<Slice>& secondVector = multiStreamSlice[1];
+            size_t n = secondVector.size();
+            for (size_t i = 1; i < n / 2; ++i) {
+                std::swap(secondVector[i], secondVector[n - i]);
+            }
+    } else if (ringNum == OUTER_PLANE_NUM_IN_NPRING_DOUBLE) {
+        // 双环数据相同
+            for(int i=0;i<2;++i){
+                multiStreamSlice.push_back(dataSegsSlice);
+            }
+
+            std::vector<Slice>& secondVector = multiStreamSlice[1];
+            size_t n = secondVector.size();
+            for (size_t i = 1; i < n / 2; ++i) {
+                std::swap(secondVector[i], secondVector[n - i]);
+            }
+    } else {
+        multiStreamSlice.push_back(dataSegsSlice);
+    }
+
+    return multiStreamSlice;
+}
+
 u64 CollCommExecutor::GetReduceAttr(DeviceMem &inputMem, DeviceMem &outputMem, HcclDataType dataType, HcclReduceOp op)
 {
     u64 reduceAttr = 0;
