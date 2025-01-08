@@ -38,7 +38,7 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::CalcTransportMemType(Tran
         inputType = TransportMemType::PARAM_INPUT;
         outputType = TransportMemType::PARAM_OUTPUT;
     }
-    HCCL_INFO("[CollAllGatherRingFor91093Executor][CalcTransportMemType] tag[%s] inputType[%d], outputType[%d]",
+    HCCL_INFO("[CollAlignedAllGatherAsymDoubleRingExecutor][CalcTransportMemType] tag[%s] inputType[%d], outputType[%d]",
         tag_.c_str(), inputType, outputType);
     return HCCL_SUCCESS;
 }

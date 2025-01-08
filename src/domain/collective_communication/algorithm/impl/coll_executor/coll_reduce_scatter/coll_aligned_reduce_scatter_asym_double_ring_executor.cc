@@ -37,7 +37,7 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::CalcTransportMemType(
         inputType = TransportMemType::PARAM_INPUT;
         outputType = TransportMemType::PARAM_OUTPUT;
     }
-    HCCL_INFO("[CollAllGatherRingFor91093Executor][CalcTransportMemType] tag[%s] inputType[%d], outputType[%d]",
+    HCCL_INFO("[CollAlignedReduceScatterAsymDoubleRingExecutor][CalcTransportMemType] tag[%s] inputType[%d], outputType[%d]",
         tag_.c_str(), inputType, outputType);
     return HCCL_SUCCESS;
 }
@@ -84,7 +84,7 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::DoubleRingReduceScatt
         nicList.push_back(i);
     }
     HCCL_INFO("outerZeroCommInfo.localRankSize");
-    
+
     std::vector<std::vector<u32>> multiRingsOrder =
         GetRingsOrderByTopoType(outerZeroCommInfo.localRankSize, topoType_, nicList);
 
