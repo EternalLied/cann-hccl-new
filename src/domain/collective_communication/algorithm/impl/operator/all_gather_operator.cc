@@ -155,8 +155,8 @@ HcclResult AllGatherOperator::SelectAlgfor91093(const OpParam& param, std::strin
                 HCCL_ERROR("[AllGatherOperator][SelectAlgfor91093]errNo[0x%016llx] tag[%s], AllGather concurrent "\
                     "set inter server ring algo failed", HCCL_ERROR_CODE(ret), param.tag.c_str()), ret);
         }
-        algName = "AllGatherDoubleRingConcurrentExecutor";
-        // algName = "AllGatherDoubleRingAsymExecutor";
+        // algName = "AllGatherDoubleRingConcurrentExecutor";
+        algName = "AllGatherDoubleRingAsymExecutor";
     } else {
         if (GetExternalInputEnableRdmaSdmaConcurrent()) {
             if (!(UseInterServerRingAlgo(algType_) || UseInterServerNBAlgo(algType_))) {
