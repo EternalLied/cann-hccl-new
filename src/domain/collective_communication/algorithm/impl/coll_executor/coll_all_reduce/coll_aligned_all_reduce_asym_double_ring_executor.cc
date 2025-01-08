@@ -238,7 +238,7 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
     SubCommInfo outerCommInfo = GetSubCommInfo(COMM_COMBINE_ORDER, COMM_INDEX_0);
 
     u32 sliceNum = outerCommInfo.localRankSize;
-    
+
     // // 根据数据量计算每个环上数据的偏移和大小
     // CHK_RET(ExecutorBase::PrepareSliceData(execMem.count, perDataSize, sliceNum, 0, dataSegsSlice));
 
@@ -259,7 +259,7 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
         ringNum = OUTER_PLANE_NUM_IN_NPRING_SINGLE;
     }
 
-    multRingsSliceZero = ReduceScatterASYMRingSlicePrepare(ringNum, sliceNum, false, execMem.outputMem,
+    multRingsSliceZero = ASYMMultiRingSlicePrepare(ringNum, sliceNum, false, execMem.outputMem,
         dataSegsSlice, param.tag);
 
     // 第一步的reducescatter输出放在CCL buffer上，通过设置nullptr指示不做最后一步的DMA削减动作

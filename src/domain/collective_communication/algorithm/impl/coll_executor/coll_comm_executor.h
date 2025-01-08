@@ -117,7 +117,7 @@ public:
     std::vector<std::vector<Slice> > PrepareMultiRingSlice(const std::vector<Slice> &dataSegsSlice,
         const std::string &tag, bool avoidCceRewrite = false, std::vector<u32> nicList = {0, 1, 2, 3, 4, 5, 6, 7});
     
-    std::vector<std::vector<Slice>> CollCommExecutor::ASYMMultiRingSlicePrepare(u32 ringNum, u32 sliceNum,
+    std::vector<std::vector<Slice>> ASYMMultiRingSlicePrepare(u32 ringNum, u32 sliceNum,
     bool useInlineReduce, DeviceMem& outputMem, std::vector<Slice>& dataSegsSlice, const std::string &tag);
 
     u32 RefreshCommIdx(u32 commIndex, std::vector<u32> nicList, u32 devicePhyId);
