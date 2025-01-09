@@ -221,7 +221,7 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::KernelRun(const OpPar
     SubCommInfo outerCommInfo = GetSubCommInfo(COMM_COMBINE_ORDER, COMM_INDEX_0);
 
     u32 ringNum;
-    if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) {
+    if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING || topoType_ == TopoType::TOPO_TYPE_COMMON) {
         ringNum = OUTER_PLANE_NUM_IN_NPRING_DOUBLE;
     } else {
         ringNum = OUTER_PLANE_NUM_IN_NPRING_SINGLE;
@@ -291,7 +291,7 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::KernelRun(const OpPar
     }
 
     if (opInfoPtr == nullptr &&
-        (!(topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING &&
+        (!((topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING || topoType_ == TopoType::TOPO_TYPE_COMMON) &&
         (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OPS_KERNEL_INFO_LIB || param.retryEnable)))) {
         multRingsUserMemSlice = level0DataSegsSlice;
     } else {
@@ -314,7 +314,7 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::KernelRun(const OpPar
         }
     }
     // 区分消减拷贝场景
-    if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING &&
+    if ((topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING || topoType_ == TopoType::TOPO_TYPE_COMMON) &&
         (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OPS_KERNEL_INFO_LIB)) {
         // 图模式opinfo不为空
         HcomCollOpInfo graphModeOpInfo = {

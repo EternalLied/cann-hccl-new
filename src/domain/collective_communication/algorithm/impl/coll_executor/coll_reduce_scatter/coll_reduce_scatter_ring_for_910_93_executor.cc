@@ -54,14 +54,14 @@ HcclResult CollReduceScatterRingFor91093Executor::CalcScratchMemSize(u64& scratc
 
 HcclResult CollReduceScatterRingFor91093Executor::CalcStreamNum(u32& streamNum)
 {
-    u32 totalStreamNum = (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING ? OUTER_PLANE_NUM_IN_NPRING_DOUBLE :
+    u32 totalStreamNum = ((topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING || topoType_ == TopoType::TOPO_TYPE_COMMON) ? OUTER_PLANE_NUM_IN_NPRING_DOUBLE :
         OUTER_PLANE_NUM_IN_NPRING_SINGLE);
     if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
         totalStreamNum *= STREAM_NUM_FOR_DMAREDUCE_ONE_RING;
     }
     if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OPS_KERNEL_INFO_LIB && 
         GetExternalInputEnableRdmaSdmaConcurrent()) {
-        totalStreamNum += (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) ? OUTER_PLANE_NUM_IN_NPRING_DOUBLE :
+        totalStreamNum += (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING || topoType_ == TopoType::TOPO_TYPE_COMMON) ? OUTER_PLANE_NUM_IN_NPRING_DOUBLE :
         OUTER_PLANE_NUM_IN_NPRING_SINGLE;
     }
     streamNum = totalStreamNum - 1;
