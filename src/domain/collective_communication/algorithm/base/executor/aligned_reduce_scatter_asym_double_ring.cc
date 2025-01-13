@@ -250,7 +250,7 @@ HcclResult AlignedReduceScatterAsymDoubleRing::MemcpyInitSlicesOnMainStreams(
     } else {
         CHK_RET(LocalNotify::Post(subStreams_[0], dispatcher_, mainSignals_[0], profilerInput_.stage));
         CHK_RET(LocalNotify::Wait(subStreams_[0], dispatcher_, subSignals_[0], profilerInput_.stage));
-        CHK_RET(HcclD2DMemcpyAsync(dispatcher_, dstInit, srcInit, subStreams_[0]));
+        // CHK_RET(HcclD2DMemcpyAsync(dispatcher_, dstInit, srcInit, subStreams_[0]));
     }
     return HCCL_SUCCESS;
 }
