@@ -284,12 +284,12 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
     }
 
     // 第一步的reducescatter输出放在CCL buffer上，通过设置nullptr指示不做最后一步的DMA削减动作
-    // HcomCollOpInfo reduceScatterOpInfo = {
-    //     "", execMem.inputPtr, nullptr, execMem.count, param.DataDes.dataType, param.root, param.reduceType
-    // };
     HcomCollOpInfo reduceScatterOpInfo = {
-        "", execMem.inputPtr, execMem.outputPtr, execMem.count, param.DataDes.dataType, param.root, param.reduceType
+        "", execMem.inputPtr, nullptr, execMem.count, param.DataDes.dataType, param.root, param.reduceType
     };
+    // HcomCollOpInfo reduceScatterOpInfo = {
+    //     "", execMem.inputPtr, execMem.outputPtr, execMem.count, param.DataDes.dataType, param.root, param.reduceType
+    // };
     HcomCollOpInfo reduceScatterGraphModeOpInfo = {
         "", execMem.inputMem.ptr(), nullptr, execMem.count, param.DataDes.dataType, param.root, param.reduceType
     };
