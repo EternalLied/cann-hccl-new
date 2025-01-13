@@ -230,12 +230,12 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
     CHK_RET(SalGetDataTypeSize(param.DataDes.dataType, perDataSize));
     std::vector<Slice> dataSegsSlice; // 数据分成ranksize份，每份的起始偏移和大小
     std::vector<std::vector<Slice> > multRingsSliceZero; // 数据基于该rank上环0的偏移
-    // CHK_RET(CheckCommSize(COMM_LEVEL0, COMM_INDEX_0 + 1));
-    // SubCommInfo outerCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
+    CHK_RET(CheckCommSize(COMM_LEVEL0, COMM_INDEX_0 + 1));
+    SubCommInfo outerCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
 
-    // 获取打平通信域
-    CHK_RET(CheckCommSize(COMM_COMBINE_ORDER, COMM_INDEX_0 + 1));
-    SubCommInfo outerCommInfo = GetSubCommInfo(COMM_COMBINE_ORDER, COMM_INDEX_0);
+    // // 获取打平通信域
+    // CHK_RET(CheckCommSize(COMM_COMBINE_ORDER, COMM_INDEX_0 + 1));
+    // SubCommInfo outerCommInfo = GetSubCommInfo(COMM_COMBINE_ORDER, COMM_INDEX_0);
 
     u32 sliceNum = outerCommInfo.localRankSize;
 
