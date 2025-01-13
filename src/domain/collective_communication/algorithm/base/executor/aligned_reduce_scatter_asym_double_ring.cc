@@ -242,10 +242,10 @@ HcclResult AlignedReduceScatterAsymDoubleRing::MemcpyInitSlicesOnMainStreams(
 {
     if (ringIndex == 1) {
         CHK_RET(MainWaitSub());
-        // CHK_RET(HcclD2DMemcpyAsync(dispatcher_, dstInit, srcInit, stream_));
+        CHK_RET(HcclD2DMemcpyAsync(dispatcher_, dstInit, srcInit, stream_));
         CHK_RET(ExecutorBase::ExecEmptyTask(inputMem_, outputMem_, stream_, dispatcher_));
         CHK_RET(MainRecordSub());
-        CHK_RET(HcclD2DMemcpyAsync(dispatcher_, dstInit, srcInit, stream_));
+        // CHK_RET(HcclD2DMemcpyAsync(dispatcher_, dstInit, srcInit, stream_));
 
     } else {
         CHK_RET(LocalNotify::Post(subStreams_[0], dispatcher_, mainSignals_[0], profilerInput_.stage));
@@ -262,9 +262,9 @@ HcclResult AlignedReduceScatterAsymDoubleRing::MemcpyInitSlices(
     if (GetWorkflowMode() != HcclWorkflowMode::HCCL_WORKFLOW_MODE_OPS_KERNEL_INFO_LIB && (!retryEnable_)) {
         HCCL_DEBUG("[AlignedReduceScatterAsymDoubleRing][MemcpyInitSlices] no graph mode");
         CHK_RET(LocalNotify::Post(subStreams_[ringIndex + 1], dispatcher_, mainSignals_[ringIndex + 1], profilerInput_.stage));
-        // CHK_RET(HcclD2DMemcpyAsync(dispatcher_, dstSubInit, srcSubInit, subStreams_[ringIndex + 1]));
-        CHK_RET(LocalNotify::Wait(subStreams_[ringIndex + 1], dispatcher_, subSignals_[ringIndex + 1], profilerInput_.stage));
         CHK_RET(HcclD2DMemcpyAsync(dispatcher_, dstSubInit, srcSubInit, subStreams_[ringIndex + 1]));
+        CHK_RET(LocalNotify::Wait(subStreams_[ringIndex + 1], dispatcher_, subSignals_[ringIndex + 1], profilerInput_.stage));
+        // CHK_RET(HcclD2DMemcpyAsync(dispatcher_, dstSubInit, srcSubInit, subStreams_[ringIndex + 1]));
     } else {
         HCCL_DEBUG("[AlignedReduceScatterAsymDoubleRing][MemcpyInitSlices] graph mode");
         CHK_RET(MemcpyInitSlicesOnMainStreams(ringIndex, dstSubInit, srcSubInit));
