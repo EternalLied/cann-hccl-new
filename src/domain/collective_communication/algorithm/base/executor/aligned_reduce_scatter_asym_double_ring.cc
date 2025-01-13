@@ -507,16 +507,17 @@ HcclResult AlignedReduceScatterAsymDoubleRing::LocalMemcpy(const u32 step, const
     DeviceMem &localSrcMem, DeviceMem &localDstMem)
 {
     // 通过校验流数判断是单算子模式还是图模式
+    u32 DMA_REDUCE_ASYM_OFFSET = rankSize / 2 + 1;
     if (GetWorkflowMode() != HcclWorkflowMode::HCCL_WORKFLOW_MODE_OPS_KERNEL_INFO_LIB && (!retryEnable_)) {
         CHK_RET(LocalNotify::Post(subStreams_[ringIndex + 1], dispatcher_, mainSignals_[ringIndex + 1], profilerInput_.stage));
         CHK_RET(LocalNotify::Wait(subStreams_[ringIndex + 1], dispatcher_, subSignals_[ringIndex + 1], profilerInput_.stage));
-        if (localSrcMem != localDstMem && step != rankSize - DMA_REDUCE_TWO_OFFSET) {
+        if (localSrcMem != localDstMem && step != rankSize - DMA_REDUCE_ASYM_OFFSET) {
             CHK_RET(HcclD2DMemcpyAsync(dispatcher_, localDstMem, localSrcMem, subStreams_[ringIndex + 1]));
         }
     } else {
         // 图模式
         CHK_RET(PreSync(ringIndex));
-        if (localSrcMem != localDstMem && step != rankSize - DMA_REDUCE_TWO_OFFSET) {
+        if (localSrcMem != localDstMem && step != rankSize - DMA_REDUCE_ASYM_OFFSET) {
             if (ringIndex == 1) {
                 CHK_RET(HcclD2DMemcpyAsync(dispatcher_, localDstMem, localSrcMem, stream_));
             } else {
@@ -531,10 +532,11 @@ HcclResult AlignedReduceScatterAsymDoubleRing::RunSubStream(
     const u32 step, const u32 rankSize, u32 ringIndex,
     std::vector<DeviceMem> &localSrcMems, std::vector<DeviceMem> &localDstMems)
 {
+    u32 DMA_REDUCE_ASYM_OFFSET = rankSize / 2 + 1;
     for (u32 sliceIdx = 0; sliceIdx < localSrcMems.size(); sliceIdx++) {
         CHK_RET(LocalNotify::Post(subStreams_[ringIndex + 1], dispatcher_, mainSignals_[ringIndex + 1], profilerInput_.stage));
         CHK_RET(LocalNotify::Wait(subStreams_[ringIndex + 1], dispatcher_, subSignals_[ringIndex + 1], profilerInput_.stage));
-        if (step != rankSize - DMA_REDUCE_TWO_OFFSET) {
+        if (step != rankSize - DMA_REDUCE_ASYM_OFFSET) {
             CHK_RET(HcclD2DMemcpyAsync(dispatcher_, localDstMems[sliceIdx], localSrcMems[sliceIdx], subStreams_[ringIndex + 1]));
         }
     }
