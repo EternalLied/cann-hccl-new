@@ -477,6 +477,7 @@ HcclResult AllReduceOperator::SelectAlgfor91093(const OpParam& param, std::strin
             algName = "AllReduceComm"; // 支持91093全通信域
         }
     }
+    algName = "AlignedAllReduceAsymDoubleRingExecutor";
     HCCL_INFO("[SelectAlgfor91093] all_reduce SelectAlgfor91093 is algName [%s].", algName.c_str());
     return HCCL_SUCCESS;
 }
