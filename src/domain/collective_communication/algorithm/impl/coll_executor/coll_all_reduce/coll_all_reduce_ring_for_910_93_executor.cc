@@ -160,6 +160,16 @@ HcclResult CollAllReduceRingFor91093Executor::KernelRun(const OpParam &param, Ex
         multRingsSliceZero.push_back(dataSegsSlice);
     }
 
+    printf("multRingsSliceZero.size(): %d\n", multRingsSliceZero.size());
+    printf("multRingsSliceZero[0].size(): %d\n", multRingsSliceZero[0].size());
+    for (size_t i = 0; i < multRingsSliceZero.size(); ++i) {
+        std::cout << "Ring " << i << ":\n";
+        for (size_t j = 0; j < multRingsSliceZero[i].size(); ++j) {
+            const Slice& slice = multRingsSliceZero[i][j];
+            std::cout << "  Slice " << j << " - Offset: " << slice.offset << ", Size: " << slice.size << " bytes\n";
+        }
+    }
+
     // 第一步的reducescatter输出放在CCL buffer上，通过设置nullptr指示不做最后一步的DMA削减动作
     HcomCollOpInfo reduceScatterOpInfo = {
         "", execMem.inputPtr, nullptr, execMem.count, param.DataDes.dataType, param.root, param.reduceType

@@ -230,27 +230,27 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
     CHK_RET(SalGetDataTypeSize(param.DataDes.dataType, perDataSize));
     std::vector<Slice> dataSegsSlice; // 数据分成ranksize份，每份的起始偏移和大小
     std::vector<std::vector<Slice> > multRingsSliceZero; // 数据基于该rank上环0的偏移
-    CHK_RET(CheckCommSize(COMM_LEVEL0, COMM_INDEX_0 + 1));
-    SubCommInfo outerCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
+    // CHK_RET(CheckCommSize(COMM_LEVEL0, COMM_INDEX_0 + 1));
+    // SubCommInfo outerCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
 
-    // // 获取打平通信域
-    // CHK_RET(CheckCommSize(COMM_COMBINE_ORDER, COMM_INDEX_0 + 1));
-    // SubCommInfo outerCommInfo = GetSubCommInfo(COMM_COMBINE_ORDER, COMM_INDEX_0);
+    // 获取打平通信域
+    CHK_RET(CheckCommSize(COMM_COMBINE_ORDER, COMM_INDEX_0 + 1));
+    SubCommInfo outerCommInfo = GetSubCommInfo(COMM_COMBINE_ORDER, COMM_INDEX_0);
 
     u32 sliceNum = outerCommInfo.localRankSize;
 
-    // 根据数据量计算每个环上数据的偏移和大小
-    CHK_RET(ExecutorBase::PrepareSliceData(execMem.count, perDataSize, sliceNum, 0, dataSegsSlice));
+    // // 根据数据量计算每个环上数据的偏移和大小
+    // CHK_RET(ExecutorBase::PrepareSliceData(execMem.count, perDataSize, sliceNum, 0, dataSegsSlice));
 
-    /* 三步算法step1：外层 - 节点内 reduce-scatter */
-    // 构造ring algorithm对应的reduce-scatter实例
+    // /* 三步算法step1：外层 - 节点内 reduce-scatter */
+    // // 构造ring algorithm对应的reduce-scatter实例
 
-    //  多环数据切分
-    if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) {
-        multRingsSliceZero = PrepareMultiRingSlice(dataSegsSlice, param.tag, false, topoAttr_.nicList);
-    } else {
-        multRingsSliceZero.push_back(dataSegsSlice);
-    }
+    // //  多环数据切分
+    // if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) {
+    //     multRingsSliceZero = PrepareMultiRingSlice(dataSegsSlice, param.tag, false, topoAttr_.nicList);
+    // } else {
+    //     multRingsSliceZero.push_back(dataSegsSlice);
+    // }
 
     u32 ringNum;
     if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) {
@@ -259,8 +259,8 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
         ringNum = OUTER_PLANE_NUM_IN_NPRING_SINGLE;
     }
 
-    // multRingsSliceZero = ASYMMultiRingSlicePrepare(ringNum, sliceNum, false, execMem.outputMem,
-    //     dataSegsSlice, param.tag);
+    multRingsSliceZero = ASYMMultiRingSlicePrepare(ringNum, sliceNum, false, execMem.outputMem,
+        dataSegsSlice, param.tag);
 
     printf("multRingsSliceZero.size(): %d\n", multRingsSliceZero.size());
     printf("multRingsSliceZero[0].size(): %d\n", multRingsSliceZero[0].size());
@@ -273,8 +273,11 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
     }
 
     // 第一步的reducescatter输出放在CCL buffer上，通过设置nullptr指示不做最后一步的DMA削减动作
+    // HcomCollOpInfo reduceScatterOpInfo = {
+    //     "", execMem.inputPtr, nullptr, execMem.count, param.DataDes.dataType, param.root, param.reduceType
+    // };
     HcomCollOpInfo reduceScatterOpInfo = {
-        "", execMem.inputPtr, nullptr, execMem.count, param.DataDes.dataType, param.root, param.reduceType
+        "", execMem.inputPtr, execMem.outputPtr, execMem.count, param.DataDes.dataType, param.root, param.reduceType
     };
     HcomCollOpInfo reduceScatterGraphModeOpInfo = {
         "", execMem.inputMem.ptr(), nullptr, execMem.count, param.DataDes.dataType, param.root, param.reduceType
