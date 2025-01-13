@@ -239,18 +239,18 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
 
     u32 sliceNum = outerCommInfo.localRankSize;
 
-    // // 根据数据量计算每个环上数据的偏移和大小
-    // CHK_RET(ExecutorBase::PrepareSliceData(execMem.count, perDataSize, sliceNum, 0, dataSegsSlice));
+    // 根据数据量计算每个环上数据的偏移和大小
+    CHK_RET(ExecutorBase::PrepareSliceData(execMem.count, perDataSize, sliceNum, 0, dataSegsSlice));
 
-    // /* 三步算法step1：外层 - 节点内 reduce-scatter */
-    // // 构造ring algorithm对应的reduce-scatter实例
+    /* 三步算法step1：外层 - 节点内 reduce-scatter */
+    // 构造ring algorithm对应的reduce-scatter实例
 
-    // //  多环数据切分
-    // if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) {
-    //     multRingsSliceZero = PrepareMultiRingSlice(dataSegsSlice, param.tag, false, topoAttr_.nicList);
-    // } else {
-    //     multRingsSliceZero.push_back(dataSegsSlice);
-    // }
+    //  多环数据切分
+    if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) {
+        multRingsSliceZero = PrepareMultiRingSlice(dataSegsSlice, param.tag, false, topoAttr_.nicList);
+    } else {
+        multRingsSliceZero.push_back(dataSegsSlice);
+    }
 
     u32 ringNum;
     if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) {
@@ -259,8 +259,8 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
         ringNum = OUTER_PLANE_NUM_IN_NPRING_SINGLE;
     }
 
-    multRingsSliceZero = ASYMMultiRingSlicePrepare(ringNum, sliceNum, false, execMem.outputMem,
-        dataSegsSlice, param.tag);
+    // multRingsSliceZero = ASYMMultiRingSlicePrepare(ringNum, sliceNum, false, execMem.outputMem,
+    //     dataSegsSlice, param.tag);
 
     printf("multRingsSliceZero.size(): %d\n", multRingsSliceZero.size());
     printf("multRingsSliceZero[0].size(): %d\n", multRingsSliceZero[0].size());
