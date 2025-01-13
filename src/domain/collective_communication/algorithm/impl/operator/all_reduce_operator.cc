@@ -468,8 +468,8 @@ HcclResult AllReduceOperator::SelectAlgfor91093(const OpParam& param, std::strin
                 HcclAlgoType::HCCL_ALGO_TYPE_FAST_DOUBLE_RING) {
                 algName = "AllReduceFastDoubleRingFor91093Executor";
             } else {
-                algName = "AlignedAllReduceDoubleRingFor91093Executor";
-                // algName = "AlignedAllReduceAsymDoubleRingExecutor";
+                // algName = "AlignedAllReduceDoubleRingFor91093Executor";
+                algName = "AlignedAllReduceAsymDoubleRingExecutor";
             }
         } else if (topoType_ == TopoType::TOPO_TYPE_NP_SINGLE_RING) {
             algName = "AllReduceRingFor91093Executor";
