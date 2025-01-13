@@ -264,7 +264,7 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
 
     printf("multRingsSliceZero.size(): %d\n", multRingsSliceZero.size());
     printf("multRingsSliceZero[0].size(): %d\n", multRingsSliceZero[0].size());
-    for (size_t i = 0; i < multRingsSameSliceZero.size(); ++i) {
+    for (size_t i = 0; i < multRingsSliceZero.size(); ++i) {
         std::cout << "Ring " << i << ":\n";
         for (size_t j = 0; j < multRingsSliceZero[i].size(); ++j) {
             const Slice& slice = multRingsSliceZero[i][j];
