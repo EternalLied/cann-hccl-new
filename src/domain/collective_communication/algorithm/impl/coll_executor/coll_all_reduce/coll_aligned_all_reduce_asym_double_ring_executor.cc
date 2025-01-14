@@ -154,7 +154,7 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::DoubleRingAllGather(
     SubCommInfo outerZeroCommInfo = GetSubCommInfo(COMM_COMBINE_ORDER, COMM_INDEX_0);
     // auto nicList = topoAttr_.nicList;
     std::vector<u32> nicList;
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < outerZeroCommInfo.localRankSize; i++) {
         nicList.push_back(i);
     }
     std::vector<std::vector<u32>> multiRingsOrder =
