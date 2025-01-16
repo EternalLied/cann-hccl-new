@@ -308,6 +308,13 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
 
     bool isSelectAHC = (UseInterServerAHCAlgo(algType_) || UseInterServerAHCBrokeAlgo(algType_));
 
+    for (size_t i = 0; i < outerCommInfo.localRankSize; ++i) {
+        DeviceMem src = execMem.inputMem;
+        DeviceMem dst = DeviceMem::create(static_cast<u8 *>(opInfo_->outputAddr),
+                execMem.inputMem.size);
+        HcclD2DMemcpyAsync(dispatcher_, dst, src, const_cast<Stream&>(param.stream));
+    }
+
     // /* 三步算法step2: 内层 - 节点间 allreduce */
     // u64 hdSize;
     // u32 segmentIdx;
@@ -508,10 +515,10 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
     // CHK_RET(RunIntraSeverAllGather(param.tag, execMem.inputMem, execMem.outputMem, hdCount,
     //     param.DataDes.dataType, multRingsSliceZero, param.stream,
     //     PROF_STAGE_2, 0, allgatherOpInfoPtr));
-    CHK_RET(RunIntraSeverAllGather(param.tag, execMem.inputMem, execMem.outputMem, execMem.count,
-        param.DataDes.dataType, multRingsSliceZero, param.stream,
-        PROF_STAGE_2, 0, allgatherOpInfoPtr));
-    HCCL_INFO("allreduce double ring stage2 run success");
+    // CHK_RET(RunIntraSeverAllGather(param.tag, execMem.inputMem, execMem.outputMem, execMem.count,
+    //     param.DataDes.dataType, multRingsSliceZero, param.stream,
+    //     PROF_STAGE_2, 0, allgatherOpInfoPtr));
+    // HCCL_INFO("allreduce double ring stage2 run success");
     return HCCL_SUCCESS;
 }
 
