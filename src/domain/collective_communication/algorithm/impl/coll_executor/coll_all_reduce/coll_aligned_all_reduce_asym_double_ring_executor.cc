@@ -310,7 +310,7 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
 
     for (size_t i = 0; i < outerCommInfo.localRankSize; ++i) {
         DeviceMem src = execMem.inputMem;
-        DeviceMem dst = DeviceMem::create(static_cast<u8 *>(opInfo_->outputAddr),
+        DeviceMem dst = DeviceMem::create(execMem.outputPtr,
                 execMem.inputMem.size);
         HcclD2DMemcpyAsync(dispatcher_, dst, src, const_cast<Stream&>(param.stream));
     }
