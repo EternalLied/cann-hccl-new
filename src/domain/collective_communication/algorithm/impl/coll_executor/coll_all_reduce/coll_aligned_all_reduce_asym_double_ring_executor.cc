@@ -308,12 +308,10 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
 
     bool isSelectAHC = (UseInterServerAHCAlgo(algType_) || UseInterServerAHCBrokeAlgo(algType_));
 
-    for (size_t i = 0; i < outerCommInfo.localRankSize; ++i) {
-        DeviceMem src = execMem.inputMem;
-        DeviceMem dst = DeviceMem::create(execMem.outputPtr,
-                execMem.inputMem.size);
-        HcclD2DMemcpyAsync(dispatcher_, dst, src, const_cast<Stream&>(param.stream));
-    }
+    DeviceMem src = execMem.inputMem;
+    DeviceMem dst = DeviceMem::create(execMem.outputPtr,
+            execMem.inputMem.size());
+    HcclD2DMemcpyAsync(dispatcher_, dst, src, const_cast<Stream&>(param.stream));
 
     // /* 三步算法step2: 内层 - 节点间 allreduce */
     // u64 hdSize;
