@@ -311,7 +311,9 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
     DeviceMem src = execMem.inputMem;
     DeviceMem dst = DeviceMem::create(execMem.outputPtr,
             execMem.inputMem.size());
-    HcclD2DMemcpyAsync(dispatcher_, dst, src, const_cast<Stream&>(param.stream));
+    HcclResult ret = HCCL_SUCCESS;
+    ret = HcclD2DMemcpyAsync(dispatcher_, dst, src, const_cast<Stream&>(param.stream));
+    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("Memcpy Failed"), ret);
 
     // /* 三步算法step2: 内层 - 节点间 allreduce */
     // u64 hdSize;
