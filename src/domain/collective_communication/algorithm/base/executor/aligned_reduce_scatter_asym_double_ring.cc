@@ -640,8 +640,8 @@ HcclResult AlignedReduceScatterAsymDoubleRing::RunReduceScatter(const u32 rank, 
     u32 subSliceIdxMain = (rankSize - rank + rankSize - DMA_REDUCE_ASYM_OFFSET - 1) % rankSize;
 
     // step减为一半
-    for (u32 step = 0; step < 0; step++) {
-    // for (u32 step = 0; step < rankSize / 2; step++) {
+    // for (u32 step = 0; step < 0; step++) {
+    for (u32 step = 0; step < rankSize / 2; step++) {
         // 并发
         std::vector<SenderMemoryInfo> txReduceMemsMain;
         std::vector<ReducerMemoryInfo> rxReduceMemsMain;
