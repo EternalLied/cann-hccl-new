@@ -260,7 +260,7 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::KernelRun(const OpPar
         dataSegsSlice, param.tag);
 
     // Print Slice
-     
+    
     // printf("dataSegsSlice.size(): %d\n", dataSegsSlice.size());
     // for (size_t i = 0; i < dataSegsSlice.size(); ++i) {
     //         const Slice& slice = dataSegsSlice[i];
