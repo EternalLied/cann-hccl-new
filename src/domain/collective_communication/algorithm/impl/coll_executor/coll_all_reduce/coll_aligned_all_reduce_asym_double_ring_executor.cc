@@ -308,7 +308,7 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
 
     bool isSelectAHC = (UseInterServerAHCAlgo(algType_) || UseInterServerAHCBrokeAlgo(algType_));
 
-    DeviceMem src = execMem.inputMem;
+    // DeviceMem src = execMem.inputMem;
     DeviceMem src = DeviceMem::create(execMem.inputPtr,
             execMem.inputMem.size());
     DeviceMem dst = DeviceMem::create(execMem.outputPtr,
