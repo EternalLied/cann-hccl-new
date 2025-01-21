@@ -24,6 +24,8 @@ private:
     HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
     HcclResult CalcCombineCommInfo(TransportMemType inputType, TransportMemType outputType,
     std::vector<LevelNSubCommTransport>& opTransport);
+    HcclResult CalcLevel2CommInfo(TransportMemType inputType, TransportMemType outputType,
+    std::vector<LevelNSubCommTransport>& opTransport) override;
 
     /* *************** 算法编排 *************** */
     HcclResult DoubleRingAllGather(const std::string &tag, DeviceMem inputMem, DeviceMem outputMem, const u64 count,
