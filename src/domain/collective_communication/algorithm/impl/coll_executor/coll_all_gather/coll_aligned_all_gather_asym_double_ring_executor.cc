@@ -82,15 +82,32 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::DoubleRingAllGather(
     // CHK_RET(CheckCommSize(COMM_LEVEL0, ringNum));
     // // 拿到ring环映射关系
     // SubCommInfo outerZeroCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
+
+    // 获取LEVEL2通信域
+    CHK_RET(CheckCommSize(COMM_LEVEL2, COMM_INDEX_0 + 1));
+    SubCommInfo level2CommInfo = GetSubCommInfo(COMM_LEVEL2, COMM_INDEX_0);
+
     // 获取打平通信域
     CHK_RET(CheckCommSize(COMM_COMBINE_ORDER, COMM_INDEX_0 + 1));
     SubCommInfo outerZeroCommInfo = GetSubCommInfo(COMM_COMBINE_ORDER, COMM_INDEX_0);
+    
     // auto nicList = topoAttr_.nicList;
     std::vector<u32> nicList;
-    for (int i = 0; i < outerZeroCommInfo.localRankSize; i++) {
-        nicList.push_back(i);
+    if (level2CommInfo.localRankSize == 1){
+        for (int i = 0; i < outerZeroCommInfo.localRankSize; i++) {
+            nicList.push_back(i);
+        }
     }
-    HCCL_INFO("outerZeroCommInfo.localRankSize");
+    else if (level2CommInfo.localRankSize == 2){
+        for (int i = 0; i < outerZeroCommInfo.localRankSize / 2; i++) {
+            nicList.push_back(i);
+        }
+        // outerZeroCommInfo.links = ;
+    }
+    else{
+        HCCL_ERROR("level2CommInfo.localRankSize overflow");
+    }
+    HCCL_INFO("nicList reset by outerZeroCommInfo.localRankSize");
 
     // std::cout << "nicList: ";
     // for (auto id : nicList) {
@@ -167,9 +184,13 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::KernelRun(const OpParam &
     // SubCommInfo innerCommInfo = GetSubCommInfo(COMM_LEVEL1, level0ServerIndex);
     CHK_RET(CheckCommSize(COMM_LEVEL2, COMM_INDEX_0 + 1));
     SubCommInfo level2CommInfo = GetSubCommInfo(COMM_LEVEL2, COMM_INDEX_0);
+    std::cout << "Size of level2CommInfo.links: " << level2CommInfo.links.size() << std::endl;
+
     // 获取打平通信域
     CHK_RET(CheckCommSize(COMM_COMBINE_ORDER, COMM_INDEX_0 + 1));
     SubCommInfo outerCommInfo = GetSubCommInfo(COMM_COMBINE_ORDER, COMM_INDEX_0);
+    std::cout << "Size of combineCommInfo.links: " << outerCommInfo.links.size() << std::endl;
+
     u32 level0ServerIndex = outerCommInfo.localRank;
 
     //  第一步，将数据从input内存拷贝到output内存的对应位置
@@ -253,7 +274,7 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::KernelRun(const OpParam &
     //             level1DataSegsSlice.push_back(level1Slice);
     //         }
     //     }
-        
+    
     //     if (GetExternalInputEnableRdmaSdmaConcurrent() && (inputMemSize >= HCCL_SPLIT_SIZE_INTER_SERVER) 
     //         && !aicpuUnfoldMode_) {
     //         u32 syncTrans = (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) ? BEST_SPLIT_VALUE_DR :
