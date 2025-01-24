@@ -90,7 +90,7 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::DoubleRingAllGather(
     // 获取打平通信域
     CHK_RET(CheckCommSize(COMM_COMBINE_ORDER, COMM_INDEX_0 + 1));
     SubCommInfo outerZeroCommInfo = GetSubCommInfo(COMM_COMBINE_ORDER, COMM_INDEX_0);
-    
+
     // auto nicList = topoAttr_.nicList;
     std::vector<u32> nicList;
     if (level2CommInfo.localRankSize == 1){
@@ -99,10 +99,21 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::DoubleRingAllGather(
         }
     }
     else if (level2CommInfo.localRankSize == 2){
-        for (int i = 0; i < outerZeroCommInfo.localRankSize / 2; i++) {
+        u32 combineRankSize = outerZeroCommInfo.localRankSize / level2CommInfo.localRankSize;
+        for (int i = 0; i < combineRankSize; i++) {
             nicList.push_back(i);
         }
-        // outerZeroCommInfo.links = ;
+        u32 start = combineRankSize * level2CommInfo.localRank;
+        u32 end = combineRankSize * (level2CommInfo.localRank + 1);
+        if (start < outerZeroCommInfo.links.size() && end <= outerZeroCommInfo.links.size()) {
+            std::vector<LINK> new_links(outerZeroCommInfo.links.begin() + start, outerZeroCommInfo.links.begin() + end);
+            outerZeroCommInfo.links = new_links;
+        }
+        else {
+            HCCL_ERROR("level2CommInfo.localRankSize overflow");
+        }
+        outerZeroCommInfo.localRankSize = combineRankSize;
+        outerZeroCommInfo.localRank = outerZeroCommInfo.localRank % combineRankSize;
     }
     else{
         HCCL_ERROR("level2CommInfo.localRankSize overflow");
