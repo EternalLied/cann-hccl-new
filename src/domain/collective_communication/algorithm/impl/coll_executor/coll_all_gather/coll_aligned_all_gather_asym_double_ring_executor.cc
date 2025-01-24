@@ -195,12 +195,12 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::KernelRun(const OpParam &
     // SubCommInfo innerCommInfo = GetSubCommInfo(COMM_LEVEL1, level0ServerIndex);
     CHK_RET(CheckCommSize(COMM_LEVEL2, COMM_INDEX_0 + 1));
     SubCommInfo level2CommInfo = GetSubCommInfo(COMM_LEVEL2, COMM_INDEX_0);
-    std::cout << "Size of level2CommInfo.links: " << level2CommInfo.links.size() << std::endl;
+    // std::cout << "Size of level2CommInfo.links: " << level2CommInfo.links.size() << std::endl;
 
     // 获取打平通信域
     CHK_RET(CheckCommSize(COMM_COMBINE_ORDER, COMM_INDEX_0 + 1));
     SubCommInfo outerCommInfo = GetSubCommInfo(COMM_COMBINE_ORDER, COMM_INDEX_0);
-    std::cout << "Size of combineCommInfo.links: " << outerCommInfo.links.size() << std::endl;
+    // std::cout << "Size of combineCommInfo.links: " << outerCommInfo.links.size() << std::endl;
 
     u32 level0ServerIndex = outerCommInfo.localRank;
 

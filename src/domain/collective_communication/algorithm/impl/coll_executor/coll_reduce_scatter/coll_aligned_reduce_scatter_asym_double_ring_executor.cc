@@ -76,8 +76,14 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::DoubleRingReduceScatt
     // SubCommInfo outerZeroCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
     // auto nicList = topoAttr_.nicList;
 
+    // 获取LEVEL2通信域
+    CHK_RET(CheckCommSize(COMM_LEVEL2, COMM_INDEX_0 + 1));
+    SubCommInfo level2CommInfo = GetSubCommInfo(COMM_LEVEL2, COMM_INDEX_0);
+
+    // 获取打平通信域
     CHK_RET(CheckCommSize(COMM_COMBINE_ORDER, COMM_INDEX_0 + 1));
     SubCommInfo outerZeroCommInfo = GetSubCommInfo(COMM_COMBINE_ORDER, COMM_INDEX_0);
+    
     // auto nicList = topoAttr_.nicList;
     std::vector<u32> nicList;
     for (int i = 0; i < outerZeroCommInfo.localRankSize; i++) {
@@ -216,9 +222,14 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::KernelRun(const OpPar
 
     // CHK_RET(CheckCommSize(COMM_LEVEL0, COMM_INDEX_0 + 1));
     // SubCommInfo outerCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
+    CHK_RET(CheckCommSize(COMM_LEVEL2, COMM_INDEX_0 + 1));
+    SubCommInfo level2CommInfo = GetSubCommInfo(COMM_LEVEL2, COMM_INDEX_0);
+    // std::cout << "Size of level2CommInfo.links: " << level2CommInfo.links.size() << std::endl;
+
     // 获取打平通信域
     CHK_RET(CheckCommSize(COMM_COMBINE_ORDER, COMM_INDEX_0 + 1));
     SubCommInfo outerCommInfo = GetSubCommInfo(COMM_COMBINE_ORDER, COMM_INDEX_0);
+    // std::cout << "Size of combineCommInfo.links: " << outerCommInfo.links.size() << std::endl;
 
     u32 ringNum;
     if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING || topoType_ == TopoType::TOPO_TYPE_COMMON) {
