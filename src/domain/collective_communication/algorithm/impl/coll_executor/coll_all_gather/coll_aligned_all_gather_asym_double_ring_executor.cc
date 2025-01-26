@@ -98,26 +98,26 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::DoubleRingAllGather(
             nicList.push_back(i);
         }
     }
-    // else if (level2CommInfo.localRankSize == 2){
-    //     u32 combineRankSize = outerZeroCommInfo.localRankSize / level2CommInfo.localRankSize;
-    //     for (int i = 0; i < combineRankSize; i++) {
-    //         nicList.push_back(i);
-    //     }
-    //     u32 start = combineRankSize * level2CommInfo.localRank;
-    //     u32 end = combineRankSize * (level2CommInfo.localRank + 1);
-    //     if (start < outerZeroCommInfo.links.size() && end <= outerZeroCommInfo.links.size()) {
-    //         std::vector<LINK> new_links(outerZeroCommInfo.links.begin() + start, outerZeroCommInfo.links.begin() + end);
-    //         outerZeroCommInfo.links = new_links;
-    //     }
-    //     else {
-    //         HCCL_ERROR("level2CommInfo.localRankSize overflow");
-    //     }
-    //     outerZeroCommInfo.localRankSize = combineRankSize;
-    //     outerZeroCommInfo.localRank = outerZeroCommInfo.localRank % combineRankSize;
-    // }
-    // else{
-    //     HCCL_ERROR("level2CommInfo.localRankSize overflow");
-    // }
+    else if (level2CommInfo.localRankSize == 2){
+        u32 combineRankSize = outerZeroCommInfo.localRankSize / level2CommInfo.localRankSize;
+        for (int i = 0; i < combineRankSize; i++) {
+            nicList.push_back(i);
+        }
+        u32 start = combineRankSize * level2CommInfo.localRank;
+        u32 end = combineRankSize * (level2CommInfo.localRank + 1);
+        if (start < outerZeroCommInfo.links.size() && end <= outerZeroCommInfo.links.size()) {
+            std::vector<LINK> new_links(outerZeroCommInfo.links.begin() + start, outerZeroCommInfo.links.begin() + end);
+            outerZeroCommInfo.links = new_links;
+        }
+        else {
+            HCCL_ERROR("level2CommInfo.localRankSize overflow");
+        }
+        outerZeroCommInfo.localRankSize = combineRankSize;
+        outerZeroCommInfo.localRank = outerZeroCommInfo.localRank % combineRankSize;
+    }
+    else{
+        HCCL_ERROR("level2CommInfo.localRankSize overflow");
+    }
     HCCL_INFO("nicList reset by outerZeroCommInfo.localRankSize");
 
     // std::cout << "nicList: ";
@@ -212,7 +212,7 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::KernelRun(const OpParam &
     u32 level2RankSize = level2CommInfo.localRankSize;
     u32 level1RankSize = 1;
     // u32 level2RankSize = 1;
-    std::cout << "level2RankSize: " << level2RankSize << std::endl;
+    // std::cout << "level2RankSize: " << level2RankSize << std::endl;
 
     u64 inputMemSize = execMem.inputMem.size();
     u64 dstMemOffset = topoAttr_.userRank * inputMemSize;
