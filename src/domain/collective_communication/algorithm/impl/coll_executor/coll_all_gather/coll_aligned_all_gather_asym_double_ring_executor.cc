@@ -373,6 +373,9 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::KernelRun(const OpParam &
         // allgather输入放在CCL buffer上，通过设置nullptr指示要从CCL buffer获取输入
         opInfo.inputAddr = nullptr;
     }
+
+    std::cout << "execMem.count: " << execMem.count <<std::endl;
+
     CHK_RET(RunIntraSeverAllGather(param.tag, execMem.inputMem, execMem.outputMem, execMem.count,
         param.DataDes.dataType, multRingsSlice, param.stream, PROF_STAGE_2, 0, opInfoPtr, multRingsUserMemSlice));
     HCCL_INFO("allgather double ring run success");
