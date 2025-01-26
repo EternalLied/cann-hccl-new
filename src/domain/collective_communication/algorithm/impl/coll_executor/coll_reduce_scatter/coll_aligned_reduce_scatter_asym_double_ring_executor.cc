@@ -24,6 +24,7 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::CalcCommInfo(std::vec
     TransportMemType outputType = TransportMemType::RESERVED;
     CHK_RET(CalcTransportMemType(inputType, outputType));
     CHK_RET(CalcCombineCommInfo(inputType, outputType, opTransport));
+    CHK_RET(CalcLevel2CommInfo(inputType, outputType, opTransport));
     return HCCL_SUCCESS;
 }
 
@@ -58,7 +59,7 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::CalcCombineCommInfo(T
     return HCCL_SUCCESS;
 }
 
-HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::CalcLevel2CommInfo(TransportMemType inputType, TransportMemType outputType,
+HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::CalcLevel2CommInfo(TransportMemType inputType, TransportMemType outputType,
     std::vector<LevelNSubCommTransport>& opTransport)
 {
     CommParaInfo commParaLevel2(COMM_LEVEL2, CommType::COMM_TAG_MAX);
