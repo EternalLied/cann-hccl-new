@@ -373,6 +373,9 @@ HcclResult TopoInfoExtractor::SetTopologyInfo()
             meshAggregationRankSize_, userRankSize_);
     }
     CommPlaneVector_[COMM_COMBINE_ORDER].push_back(rankVector_);
+    // std::vector<RankInfo> rankVector = rankVector_;
+    // std::reverse(rankVector.begin(), rankVector.end());
+    // CommPlaneVector_[COMM_COMBINE_ORDER].push_back(rankVector);
     return HCCL_SUCCESS;
 }
 
