@@ -58,6 +58,15 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::CalcCombineCommInfo(T
     return HCCL_SUCCESS;
 }
 
+HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::CalcLevel2CommInfo(TransportMemType inputType, TransportMemType outputType,
+    std::vector<LevelNSubCommTransport>& opTransport)
+{
+    CommParaInfo commParaLevel2(COMM_LEVEL2, CommType::COMM_TAG_MAX);
+    commParaLevel2.commType = CommType::COMM_TAG_RING_INNER;
+    CHK_RET(CalcCommPlaneInfo(tag_, commParaLevel2, opTransport[COMM_LEVEL2], inputType, outputType));
+    return HCCL_SUCCESS;
+}
+
 HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::DoubleRingReduceScatter(
     const std::string &tag, DeviceMem inputMem, DeviceMem outputMem,
     const u64 count, const HcclDataType dataType, const HcclReduceOp reductionOp,
