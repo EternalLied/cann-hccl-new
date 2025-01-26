@@ -478,7 +478,7 @@ HcclResult AllReduceOperator::SelectAlgfor91093(const OpParam& param, std::strin
         }
     }
     algName = "AlignedAllReduceAsymDoubleRingExecutor";
-    algName = "AlignedAllReduceDoubleRingFor91093Executor";
+    // algName = "AlignedAllReduceDoubleRingFor91093Executor";
     HCCL_INFO("[SelectAlgfor91093] all_reduce SelectAlgfor91093 is algName [%s].", algName.c_str());
     return HCCL_SUCCESS;
 }
