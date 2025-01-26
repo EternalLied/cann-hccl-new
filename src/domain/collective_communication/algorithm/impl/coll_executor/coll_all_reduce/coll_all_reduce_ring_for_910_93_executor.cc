@@ -389,6 +389,10 @@ HcclResult CollAllReduceRingFor91093Executor::KernelRun(const OpParam &param, Ex
     if (DMAReduceFlag_) {
         allgatherOpInfoPtr = &allgatherOpInfo;
     }
+
+    std::cout << "hdCount: " << hdCount <<std::endl;
+    std::cout << "execMem.count: " << execMem.count <<std::endl;
+
     CHK_RET(RunIntraSeverAllGather(param.tag, execMem.inputMem, execMem.outputMem, hdCount,
         param.DataDes.dataType, multRingsSliceZero, param.stream,
         PROF_STAGE_2, 0, allgatherOpInfoPtr));
