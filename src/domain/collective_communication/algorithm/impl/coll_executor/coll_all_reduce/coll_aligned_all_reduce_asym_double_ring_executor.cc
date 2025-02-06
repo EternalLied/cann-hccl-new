@@ -305,21 +305,21 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
         reduceScatterOpInfoPtr = &reduceScatterOpInfo;
     }
     const std::vector<std::vector<Slice>> multRingsUserMemSliceDefault = std::vector<std::vector<Slice>>(0);
-    CHK_RET(RunIntraSeverReduceScatter(param.tag, execMem.inputMem, execMem.outputMem, execMem.count / outerCommInfo.localRankSize,
+    CHK_RET(RunIntraSeverReduceScatter(param.tag, execMem.inputMem, execMem.outputMem, execMem.count,
         param.DataDes.dataType, param.reduceType, multRingsSliceZero, param.stream,
         PROF_STAGE_0, 0, reduceScatterOpInfoPtr, multRingsUserMemSliceDefault, param.retryEnable));
     HCCL_INFO("allreduce double ring stage0 run success.");
 
     bool isSelectAHC = (UseInterServerAHCAlgo(algType_) || UseInterServerAHCBrokeAlgo(algType_));
 
-    // DeviceMem src = execMem.inputMem;
-    // // DeviceMem src = DeviceMem::create(execMem.inputPtr,
-    // //         execMem.inputMem.size());
-    // DeviceMem dst = DeviceMem::create(execMem.outputPtr,
+    DeviceMem src = execMem.inputMem;
+    // DeviceMem src = DeviceMem::create(execMem.inputPtr,
     //         execMem.inputMem.size());
-    // HcclResult ret = HCCL_SUCCESS;
-    // ret = HcclD2DMemcpyAsync(dispatcher_, dst, src, const_cast<Stream&>(param.stream));
-    // CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("Memcpy Failed"), ret);
+    DeviceMem dst = DeviceMem::create(execMem.outputPtr,
+            execMem.inputMem.size());
+    HcclResult ret = HCCL_SUCCESS;
+    ret = HcclD2DMemcpyAsync(dispatcher_, dst, src, const_cast<Stream&>(param.stream));
+    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("Memcpy Failed"), ret);
 
     // /* 三步算法step2: 内层 - 节点间 allreduce */
     // u64 hdSize;
@@ -522,9 +522,9 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
 
     // std::cout << "hdCount: " << hdCount << std::endl;
 
-    CHK_RET(RunIntraSeverAllGather(param.tag, execMem.inputMem, execMem.outputMem, hdCount,
-        param.DataDes.dataType, multRingsSliceZero, param.stream,
-        PROF_STAGE_2, 0, allgatherOpInfoPtr));
+    // CHK_RET(RunIntraSeverAllGather(param.tag, execMem.inputMem, execMem.outputMem, hdCount,
+    //     param.DataDes.dataType, multRingsSliceZero, param.stream,
+    //     PROF_STAGE_2, 0, allgatherOpInfoPtr));
     // CHK_RET(RunIntraSeverAllGather(param.tag, execMem.inputMem, execMem.outputMem, execMem.count,
     //     param.DataDes.dataType, multRingsSliceZero, param.stream,
     //     PROF_STAGE_2, 0, allgatherOpInfoPtr));
