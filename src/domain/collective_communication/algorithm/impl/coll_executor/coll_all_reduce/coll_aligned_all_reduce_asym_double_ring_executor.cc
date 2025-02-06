@@ -285,7 +285,7 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
     //     }
     // }
 
-    std::cout << "execMem.count: " << execMem.count << std::endl;
+    // std::cout << "execMem.count: " << execMem.count << std::endl;
 
     // 第一步的reducescatter输出放在CCL buffer上，通过设置nullptr指示不做最后一步的DMA削减动作
     HcomCollOpInfo reduceScatterOpInfo = {
