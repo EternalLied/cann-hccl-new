@@ -285,6 +285,8 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
     //     }
     // }
 
+    std::cout << "execMem.count: " << execMem.count << std::endl;
+
     // 第一步的reducescatter输出放在CCL buffer上，通过设置nullptr指示不做最后一步的DMA削减动作
     HcomCollOpInfo reduceScatterOpInfo = {
         "", execMem.inputPtr, nullptr, execMem.count, param.DataDes.dataType, param.root, param.reduceType
@@ -303,7 +305,7 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
         reduceScatterOpInfoPtr = &reduceScatterOpInfo;
     }
     const std::vector<std::vector<Slice>> multRingsUserMemSliceDefault = std::vector<std::vector<Slice>>(0);
-    CHK_RET(RunIntraSeverReduceScatter(param.tag, execMem.inputMem, execMem.outputMem, execMem.count,
+    CHK_RET(RunIntraSeverReduceScatter(param.tag, execMem.inputMem, execMem.outputMem, execMem.count / outerCommInfo.localRankSize,
         param.DataDes.dataType, param.reduceType, multRingsSliceZero, param.stream,
         PROF_STAGE_0, 0, reduceScatterOpInfoPtr, multRingsUserMemSliceDefault, param.retryEnable));
     HCCL_INFO("allreduce double ring stage0 run success.");
