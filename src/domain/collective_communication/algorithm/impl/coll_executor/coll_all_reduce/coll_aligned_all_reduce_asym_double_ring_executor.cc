@@ -518,7 +518,7 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
     }
     u64 hdCount = execMem.count / outerCommInfo.localRankSize;
 
-    std::cout << "hdCount: " << hdCount << std::endl;
+    // std::cout << "hdCount: " << hdCount << std::endl;
 
     CHK_RET(RunIntraSeverAllGather(param.tag, execMem.inputMem, execMem.outputMem, hdCount,
         param.DataDes.dataType, multRingsSliceZero, param.stream,
