@@ -518,16 +518,15 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
     if (DMAReduceFlag_) {
         allgatherOpInfoPtr = &allgatherOpInfo;
     }
-    u64 hdCount = execMem.count / outerCommInfo.localRankSize;
-
+    // u64 hdCount = execMem.count / outerCommInfo.localRankSize;
     // std::cout << "hdCount: " << hdCount << std::endl;
 
     // CHK_RET(RunIntraSeverAllGather(param.tag, execMem.inputMem, execMem.outputMem, hdCount,
     //     param.DataDes.dataType, multRingsSliceZero, param.stream,
     //     PROF_STAGE_2, 0, allgatherOpInfoPtr));
-    // CHK_RET(RunIntraSeverAllGather(param.tag, execMem.inputMem, execMem.outputMem, execMem.count,
-    //     param.DataDes.dataType, multRingsSliceZero, param.stream,
-    //     PROF_STAGE_2, 0, allgatherOpInfoPtr));
+    CHK_RET(RunIntraSeverAllGather(param.tag, execMem.inputMem, execMem.outputMem, execMem.count,
+        param.DataDes.dataType, multRingsSliceZero, param.stream,
+        PROF_STAGE_2, 0, allgatherOpInfoPtr));
     HCCL_INFO("allreduce double ring stage2 run success");
     return HCCL_SUCCESS;
 }
