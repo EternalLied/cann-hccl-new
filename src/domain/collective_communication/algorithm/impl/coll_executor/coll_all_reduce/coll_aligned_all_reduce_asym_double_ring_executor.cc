@@ -347,7 +347,7 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
                     execMem.outputMem.size()), HCCL_E_PARA);              
                 tmpSlice.offset =
                     (cclSlice.offset / execMem.outputMem.size()) * param.DataDes.count * perDataSize +
-                    multiStreamSlice[ringIndex][0].offset;
+                    multRingsSliceZero[ringIndex][0].offset;
                 level1UserMemSlice.push_back(tmpSlice);
                 HCCL_DEBUG("rank[%u], ringIndex[%u], tmpSlice.offset=[%llu], size=[%llu]",
                     topoAttr_.userRank, ringIndex, tmpSlice.offset, tmpSlice.size);
