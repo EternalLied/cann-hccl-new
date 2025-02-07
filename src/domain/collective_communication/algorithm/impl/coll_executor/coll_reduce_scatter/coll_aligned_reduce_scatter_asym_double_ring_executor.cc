@@ -157,7 +157,6 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::RunIntraSeverReduceSc
 {
     CHK_RET(DoubleRingReduceScatter(tag, inputMem, outputMem, count, dataType, reductionOp,
         multRingsSliceZero, stream, profStage, baseOffset, opInfo, multRingsUserMemSlice, retryEnable));
-    return HCCL_SUCCESS;
 
     std::cout << "Tag: " << tag << std::endl;
     std::cout << "InputMem: " << inputMem << std::endl;
@@ -185,6 +184,7 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::RunIntraSeverReduceSc
         }
     }
 
+    return HCCL_SUCCESS;
 }
 
 void CollAlignedReduceScatterAsymDoubleRingExecutor::FillMultiRingSlice(
