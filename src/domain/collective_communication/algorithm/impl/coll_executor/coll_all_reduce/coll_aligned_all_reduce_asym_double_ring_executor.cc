@@ -349,23 +349,23 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
     //     (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OPS_KERNEL_INFO_LIB || param.retryEnable)))) {
     //     multRingsUserMemSliceDefault = multRingsSliceZero;
     // } else {
-    for (u32 ringIndex = 0; ringIndex < multRingsSliceZero.size(); ringIndex++) {
-            std::vector<Slice> level1UserMemSlice;
-            for (auto &cclSlice : multRingsSliceZero[ringIndex]) {
-                Slice tmpSlice;
-                tmpSlice.size = cclSlice.size;
-                CHK_PRT_RET(execMem.outputMem.size() == 0,
-                    HCCL_ERROR("[KernelRun]cclout memsize[%llu] is zero",
-                    execMem.outputMem.size()), HCCL_E_PARA);              
-                tmpSlice.offset =
-                    (cclSlice.offset / execMem.outputMem.size()) * param.DataDes.count * perDataSize +
-                    multRingsSliceZero[ringIndex][0].offset;
-                level1UserMemSlice.push_back(tmpSlice);
-                HCCL_DEBUG("rank[%u], ringIndex[%u], tmpSlice.offset=[%llu], size=[%llu]",
-                    topoAttr_.userRank, ringIndex, tmpSlice.offset, tmpSlice.size);
-            }
-            multRingsUserMemSliceDefault.push_back(level1UserMemSlice);
-        }
+    // for (u32 ringIndex = 0; ringIndex < multRingsSliceZero.size(); ringIndex++) {
+    //         std::vector<Slice> level1UserMemSlice;
+    //         for (auto &cclSlice : multRingsSliceZero[ringIndex]) {
+    //             Slice tmpSlice;
+    //             tmpSlice.size = cclSlice.size;
+    //             CHK_PRT_RET(execMem.outputMem.size() == 0,
+    //                 HCCL_ERROR("[KernelRun]cclout memsize[%llu] is zero",
+    //                 execMem.outputMem.size()), HCCL_E_PARA);              
+    //             tmpSlice.offset =
+    //                 (cclSlice.offset / execMem.outputMem.size()) * param.DataDes.count * perDataSize +
+    //                 multRingsSliceZero[ringIndex][0].offset;
+    //             level1UserMemSlice.push_back(tmpSlice);
+    //             HCCL_DEBUG("rank[%u], ringIndex[%u], tmpSlice.offset=[%llu], size=[%llu]",
+    //                 topoAttr_.userRank, ringIndex, tmpSlice.offset, tmpSlice.size);
+    //         }
+    //         multRingsUserMemSliceDefault.push_back(level1UserMemSlice);
+    //     }
 
     CHK_RET(RunIntraSeverReduceScatter(param.tag, execMem.inputMem, execMem.outputMem, execMem.count,
         param.DataDes.dataType, param.reduceType, multRingsSliceZero, param.stream,
