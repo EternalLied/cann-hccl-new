@@ -234,16 +234,16 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::RunIntraSeverReduceScatte
             std::cout << "  Slice " << j << " - Offset: " << slice.offset << ", Size: " << slice.size << " bytes\n";
         }
     }
-    std::cout << "multRingsUserMemSlice size: " << multRingsUserMemSlice.size() << std::endl;
-    std::cout << "multRingsUserMemSlice[0].size(): " << multRingsUserMemSlice[0].size() << std::endl;
-    std::cout << "BaseOffset: " << baseOffset << std::endl;
-    for (size_t i = 0; i < multRingsUserMemSlice.size(); ++i) {
-        std::cout << "Ring " << i << ":\n";
-        for (size_t j = 0; j < multRingsUserMemSlice[i].size(); ++j) {
-            const Slice& slice = multRingsUserMemSlice[i][j];
-            std::cout << "  Slice " << j << " - Offset: " << slice.offset << ", Size: " << slice.size << " bytes\n";
-        }
-    }
+    // std::cout << "multRingsUserMemSlice size: " << multRingsUserMemSlice.size() << std::endl;
+    // std::cout << "multRingsUserMemSlice[0].size(): " << multRingsUserMemSlice[0].size() << std::endl;
+    // std::cout << "BaseOffset: " << baseOffset << std::endl;
+    // for (size_t i = 0; i < multRingsUserMemSlice.size(); ++i) {
+    //     std::cout << "Ring " << i << ":\n";
+    //     for (size_t j = 0; j < multRingsUserMemSlice[i].size(); ++j) {
+    //         const Slice& slice = multRingsUserMemSlice[i][j];
+    //         std::cout << "  Slice " << j << " - Offset: " << slice.offset << ", Size: " << slice.size << " bytes\n";
+    //     }
+    // }
 
     CHK_RET(DoubleRingReduceScatter(tag, inputMem, outputMem, count, dataType, reductionOp,
         multRingsSliceZero, stream, profStage, baseOffset, opInfo, multRingsUserMemSlice, retryEnable));
