@@ -102,6 +102,18 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::DoubleRingReduceScatter(c
         opInfo, multRingsSliceZero,
         multiRingsOrder, multRingsUserMemSlice,
         userMemInputSlicesOfDoubleRing));
+
+    std::cout << "userMemInputSlicesOfDoubleRing size: " << userMemInputSlicesOfDoubleRing.size() << std::endl;
+    std::cout << "userMemInputSlicesOfDoubleRing[0].size(): " << userMemInputSlicesOfDoubleRing[0].size() << std::endl;
+    std::cout << "BaseOffset: " << baseOffset << std::endl;
+    for (size_t i = 0; i < userMemInputSlicesOfDoubleRing.size(); ++i) {
+        std::cout << "Ring " << i << ":\n";
+        for (size_t j = 0; j < userMemInputSlicesOfDoubleRing[i].size(); ++j) {
+            const Slice& slice = userMemInputSlicesOfDoubleRing[i][j];
+            std::cout << "  Slice " << j << " - Offset: " << slice.offset << ", Size: " << slice.size << " bytes\n";
+        }
+    }
+
     // 生成两个ring上的rankOrder
     std::vector<std::vector<u32>> rankOrders;
     CHK_RET(CollectMultiRingsRankOrder(ringNum, multiRingsOrder, rankOrders));
@@ -343,7 +355,7 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
                 Slice tmpSlice;
                 tmpSlice.size = cclSlice.size;
                 CHK_PRT_RET(execMem.outputMem.size() == 0,
-                    HCCL_ERROR("[CollReduceScatterRingFor91093Executor][KernelRun]cclout memsize[%llu] is zero",
+                    HCCL_ERROR("[KernelRun]cclout memsize[%llu] is zero",
                     execMem.outputMem.size()), HCCL_E_PARA);              
                 tmpSlice.offset =
                     (cclSlice.offset / execMem.outputMem.size()) * param.DataDes.count * perDataSize +
