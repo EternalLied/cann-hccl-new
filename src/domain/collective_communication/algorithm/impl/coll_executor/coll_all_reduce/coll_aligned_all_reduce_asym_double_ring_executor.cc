@@ -219,21 +219,21 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::RunIntraSeverReduceScatte
     const u64 baseOffset, const HcomCollOpInfo *opInfo,
     const std::vector<std::vector<Slice>> &multRingsUserMemSlice, const bool retryEnable)
 {
-    std::cout << "Tag: " << tag << std::endl;
-    std::cout << "InputMem: " << inputMem << std::endl;
-    std::cout << "OutputMem: " << outputMem << std::endl;
-    std::cout << "Count: " << count << std::endl;
-    std::cout << "DataType: " << dataType << std::endl;
-    std::cout << "MultRingsSliceZero size: " << multRingsSliceZero.size() << std::endl;
-    std::cout << "multRingsSliceZero[0].size(): " << multRingsSliceZero[0].size() << std::endl;
-    std::cout << "BaseOffset: " << baseOffset << std::endl;
-    for (size_t i = 0; i < multRingsSliceZero.size(); ++i) {
-        std::cout << "Ring " << i << ":\n";
-        for (size_t j = 0; j < multRingsSliceZero[i].size(); ++j) {
-            const Slice& slice = multRingsSliceZero[i][j];
-            std::cout << "  Slice " << j << " - Offset: " << slice.offset << ", Size: " << slice.size << " bytes\n";
-        }
-    }
+    // std::cout << "Tag: " << tag << std::endl;
+    // std::cout << "InputMem: " << inputMem << std::endl;
+    // std::cout << "OutputMem: " << outputMem << std::endl;
+    // std::cout << "Count: " << count << std::endl;
+    // std::cout << "DataType: " << dataType << std::endl;
+    // std::cout << "MultRingsSliceZero size: " << multRingsSliceZero.size() << std::endl;
+    // std::cout << "multRingsSliceZero[0].size(): " << multRingsSliceZero[0].size() << std::endl;
+    // std::cout << "BaseOffset: " << baseOffset << std::endl;
+    // for (size_t i = 0; i < multRingsSliceZero.size(); ++i) {
+    //     std::cout << "Ring " << i << ":\n";
+    //     for (size_t j = 0; j < multRingsSliceZero[i].size(); ++j) {
+    //         const Slice& slice = multRingsSliceZero[i][j];
+    //         std::cout << "  Slice " << j << " - Offset: " << slice.offset << ", Size: " << slice.size << " bytes\n";
+    //     }
+    // }
     // std::cout << "multRingsUserMemSlice size: " << multRingsUserMemSlice.size() << std::endl;
     // std::cout << "multRingsUserMemSlice[0].size(): " << multRingsUserMemSlice[0].size() << std::endl;
     // std::cout << "BaseOffset: " << baseOffset << std::endl;
@@ -374,14 +374,15 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
 
     bool isSelectAHC = (UseInterServerAHCAlgo(algType_) || UseInterServerAHCBrokeAlgo(algType_));
 
-    DeviceMem src = execMem.inputMem;
-    // DeviceMem src = DeviceMem::create(execMem.inputPtr,
+    // // 将CCLIn的内存拷贝到UserOut，注释掉allgather可以通过hccl_test查看ReduceScatter的执行结果
+    // DeviceMem src = execMem.inputMem;
+    // // DeviceMem src = DeviceMem::create(execMem.inputPtr, // UserIn内存地址
+    // //         execMem.inputMem.size());
+    // DeviceMem dst = DeviceMem::create(execMem.outputPtr,
     //         execMem.inputMem.size());
-    DeviceMem dst = DeviceMem::create(execMem.outputPtr,
-            execMem.inputMem.size());
-    HcclResult ret = HCCL_SUCCESS;
-    ret = HcclD2DMemcpyAsync(dispatcher_, dst, src, const_cast<Stream&>(param.stream));
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("Memcpy Failed"), ret);
+    // HcclResult ret = HCCL_SUCCESS;
+    // ret = HcclD2DMemcpyAsync(dispatcher_, dst, src, const_cast<Stream&>(param.stream));
+    // CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("Memcpy Failed"), ret);
 
     // /* 三步算法step2: 内层 - 节点间 allreduce */
     // u64 hdSize;
@@ -583,12 +584,13 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
     // u64 hdCount = execMem.count / outerCommInfo.localRankSize;
     // std::cout << "hdCount: " << hdCount << std::endl;
 
+    // 传入的execMem.count参数没有生效
     // CHK_RET(RunIntraSeverAllGather(param.tag, execMem.inputMem, execMem.outputMem, hdCount,
     //     param.DataDes.dataType, multRingsSliceZero, param.stream,
     //     PROF_STAGE_2, 0, allgatherOpInfoPtr));
-    // CHK_RET(RunIntraSeverAllGather(param.tag, execMem.inputMem, execMem.outputMem, execMem.count,
-    //     param.DataDes.dataType, multRingsSliceZero, param.stream,
-    //     PROF_STAGE_2, 0, allgatherOpInfoPtr));
+    CHK_RET(RunIntraSeverAllGather(param.tag, execMem.inputMem, execMem.outputMem, execMem.count,
+        param.DataDes.dataType, multRingsSliceZero, param.stream,
+        PROF_STAGE_2, 0, allgatherOpInfoPtr));
     HCCL_INFO("allreduce double ring stage2 run success");
     return HCCL_SUCCESS;
 }

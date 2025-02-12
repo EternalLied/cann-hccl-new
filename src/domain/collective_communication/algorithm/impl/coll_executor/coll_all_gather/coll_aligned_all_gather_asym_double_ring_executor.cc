@@ -176,31 +176,31 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::RunIntraSeverAllGather(
     CHK_RET(DoubleRingAllGather(tag, inputMem, outputMem, count, dataType,
         multRingsSliceZero, stream, profStage, baseOffset, opInfo, multRingsUserMemSlice));
 
-    std::cout << "Tag: " << tag << std::endl;
-    std::cout << "InputMem: " << inputMem << std::endl;
-    std::cout << "OutputMem: " << outputMem << std::endl;
-    std::cout << "Count: " << count << std::endl;
-    std::cout << "DataType: " << dataType << std::endl;
-    std::cout << "MultRingsSliceZero size: " << multRingsSliceZero.size() << std::endl;
-    std::cout << "multRingsSliceZero[0].size(): " << multRingsSliceZero[0].size() << std::endl;
-    std::cout << "BaseOffset: " << baseOffset << std::endl;
-    for (size_t i = 0; i < multRingsSliceZero.size(); ++i) {
-        std::cout << "Ring " << i << ":\n";
-        for (size_t j = 0; j < multRingsSliceZero[i].size(); ++j) {
-            const Slice& slice = multRingsSliceZero[i][j];
-            std::cout << "  Slice " << j << " - Offset: " << slice.offset << ", Size: " << slice.size << " bytes\n";
-        }
-    }
-    std::cout << "multRingsUserMemSlice size: " << multRingsUserMemSlice.size() << std::endl;
-    std::cout << "multRingsUserMemSlice[0].size(): " << multRingsUserMemSlice[0].size() << std::endl;
-    std::cout << "BaseOffset: " << baseOffset << std::endl;
-    for (size_t i = 0; i < multRingsUserMemSlice.size(); ++i) {
-        std::cout << "Ring " << i << ":\n";
-        for (size_t j = 0; j < multRingsUserMemSlice[i].size(); ++j) {
-            const Slice& slice = multRingsUserMemSlice[i][j];
-            std::cout << "  Slice " << j << " - Offset: " << slice.offset << ", Size: " << slice.size << " bytes\n";
-        }
-    }
+    // std::cout << "Tag: " << tag << std::endl;
+    // std::cout << "InputMem: " << inputMem << std::endl;
+    // std::cout << "OutputMem: " << outputMem << std::endl;
+    // std::cout << "Count: " << count << std::endl;
+    // std::cout << "DataType: " << dataType << std::endl;
+    // std::cout << "MultRingsSliceZero size: " << multRingsSliceZero.size() << std::endl;
+    // std::cout << "multRingsSliceZero[0].size(): " << multRingsSliceZero[0].size() << std::endl;
+    // std::cout << "BaseOffset: " << baseOffset << std::endl;
+    // for (size_t i = 0; i < multRingsSliceZero.size(); ++i) {
+    //     std::cout << "Ring " << i << ":\n";
+    //     for (size_t j = 0; j < multRingsSliceZero[i].size(); ++j) {
+    //         const Slice& slice = multRingsSliceZero[i][j];
+    //         std::cout << "  Slice " << j << " - Offset: " << slice.offset << ", Size: " << slice.size << " bytes\n";
+    //     }
+    // }
+    // std::cout << "multRingsUserMemSlice size: " << multRingsUserMemSlice.size() << std::endl;
+    // std::cout << "multRingsUserMemSlice[0].size(): " << multRingsUserMemSlice[0].size() << std::endl;
+    // std::cout << "BaseOffset: " << baseOffset << std::endl;
+    // for (size_t i = 0; i < multRingsUserMemSlice.size(); ++i) {
+    //     std::cout << "Ring " << i << ":\n";
+    //     for (size_t j = 0; j < multRingsUserMemSlice[i].size(); ++j) {
+    //         const Slice& slice = multRingsUserMemSlice[i][j];
+    //         std::cout << "  Slice " << j << " - Offset: " << slice.offset << ", Size: " << slice.size << " bytes\n";
+    //     }
+    // }
     
     return HCCL_SUCCESS;
 }
