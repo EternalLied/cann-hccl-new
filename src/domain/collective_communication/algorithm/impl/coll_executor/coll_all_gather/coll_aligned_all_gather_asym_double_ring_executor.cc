@@ -24,8 +24,8 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::CalcCommInfo(std::vector<
     TransportMemType inputType = TransportMemType::RESERVED;
     TransportMemType outputType = TransportMemType::RESERVED;
     CHK_RET(CalcTransportMemType(inputType, outputType));
-    CHK_RET(CalcCombineCommInfo(inputType, outputType, opTransport));
     CHK_RET(CalcLevel2CommInfo(inputType, outputType, opTransport));
+    CHK_RET(CalcCombineCommInfo(inputType, outputType, opTransport));
     return HCCL_SUCCESS;
 }
 
@@ -53,10 +53,11 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::CalcCombineCommInfo(Trans
 
     LevelNSubCommTransport &commTransportLevel0 = opTransport[COMM_COMBINE_ORDER];
     for (u32 subCommIndex = 0; subCommIndex < commTransportLevel0.size(); subCommIndex++) {
-        for (auto &transportRequest : commTransportLevel0[subCommIndex].transportRequests) {
-            transportRequest.isUsedRdma = topoAttr_.isUsedRdmaMap.at(transportRequest.remoteUserRank);
-        }
-    }
+    // for (u32 subCommIndex = 0; subCommIndex < commTransportLevel0.size(); subCommIndex++) {
+    //     for (auto &transportRequest : commTransportLevel0[subCommIndex].transportRequests) {
+    //         transportRequest.isUsedRdma = topoAttr_.isUsedRdmaMap.at(transportRequest.remoteUserRank);
+    //     }
+    // }
     return HCCL_SUCCESS;
 }
 
