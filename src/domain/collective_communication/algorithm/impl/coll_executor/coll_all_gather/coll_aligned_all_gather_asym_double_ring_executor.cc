@@ -52,7 +52,6 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::CalcCombineCommInfo(Trans
     CHK_RET(CalcCommPlaneInfo(tag_, commCombinePara, opTransport[COMM_COMBINE_ORDER], inputType, outputType));
 
     LevelNSubCommTransport &commTransportLevel0 = opTransport[COMM_COMBINE_ORDER];
-    for (u32 subCommIndex = 0; subCommIndex < commTransportLevel0.size(); subCommIndex++) {
     // for (u32 subCommIndex = 0; subCommIndex < commTransportLevel0.size(); subCommIndex++) {
     //     for (auto &transportRequest : commTransportLevel0[subCommIndex].transportRequests) {
     //         transportRequest.isUsedRdma = topoAttr_.isUsedRdmaMap.at(transportRequest.remoteUserRank);
