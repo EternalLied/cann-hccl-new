@@ -402,7 +402,7 @@ HcclResult CollAlignedAllGatherAsymDoubleRingExecutor::KernelRun(const OpParam &
         opInfo.inputAddr = nullptr;
     }
 
-    std::cout << "execMem.count: " << execMem.count <<std::endl;
+    // std::cout << "execMem.count: " << execMem.count <<std::endl;
 
     CHK_RET(RunIntraSeverAllGather(param.tag, execMem.inputMem, execMem.outputMem, execMem.count,
         param.DataDes.dataType, multRingsSlice, param.stream, PROF_STAGE_2, 0, opInfoPtr, multRingsUserMemSlice));

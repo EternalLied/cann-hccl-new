@@ -153,22 +153,51 @@ HcclResult CollAllReduceRingFor91093Executor::KernelRun(const OpParam &param, Ex
     /* 三步算法step1：外层 - 节点内 reduce-scatter */
     // 构造ring algorithm对应的reduce-scatter实例
 
+    // ----------------------------------------------------
+    // //  原有多环数据切分
+    // if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) {
+    //     multRingsSliceZero = PrepareMultiRingSlice(dataSegsSlice, param.tag, false, topoAttr_.nicList);
+    // } else {
+    //     multRingsSliceZero.push_back(dataSegsSlice);
+    // }
+    // ----------------------------------------------------
+
     //  多环数据切分
     if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) {
-        multRingsSliceZero = PrepareMultiRingSlice(dataSegsSlice, param.tag, false, topoAttr_.nicList);
+        // multRingsSliceZero = PrepareMultiRingSlice(dataSegsSlice, param.tag, false, topoAttr_.nicList);
+        // 双环数据相同
+        for (int i = 0; i < 2; ++i) {
+            multRingsSliceZero.push_back(dataSegsSlice);
+        }    
+        // 获取第二个环上的数据
+        std::vector<Slice>& secondVector = multRingsSliceZero[1];
+        // 调整第二个环上的Slice顺序，按照 [0, 7, 6, 5, 4, 3, 2, 1] 的顺序进行调整
+        size_t n = secondVector.size();
+        for (size_t i = 1; i < n / 2; ++i) {
+            std::swap(secondVector[i], secondVector[n - i]);
+        }
     } else {
         multRingsSliceZero.push_back(dataSegsSlice);
     }
 
-    printf("multRingsSliceZero.size(): %d\n", multRingsSliceZero.size());
-    printf("multRingsSliceZero[0].size(): %d\n", multRingsSliceZero[0].size());
-    for (size_t i = 0; i < multRingsSliceZero.size(); ++i) {
-        std::cout << "Ring " << i << ":\n";
-        for (size_t j = 0; j < multRingsSliceZero[i].size(); ++j) {
-            const Slice& slice = multRingsSliceZero[i][j];
-            std::cout << "  Slice " << j << " - Offset: " << slice.offset << ", Size: " << slice.size << " bytes\n";
-        }
+    u32 ringNum;
+    if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) {
+        ringNum = OUTER_PLANE_NUM_IN_NPRING_DOUBLE;
+    } else {
+        ringNum = OUTER_PLANE_NUM_IN_NPRING_SINGLE;
     }
+
+    // ----------------------------------------------------
+
+    // printf("multRingsSliceZero.size(): %d\n", multRingsSliceZero.size());
+    // printf("multRingsSliceZero[0].size(): %d\n", multRingsSliceZero[0].size());
+    // for (size_t i = 0; i < multRingsSliceZero.size(); ++i) {
+    //     std::cout << "Ring " << i << ":\n";
+    //     for (size_t j = 0; j < multRingsSliceZero[i].size(); ++j) {
+    //         const Slice& slice = multRingsSliceZero[i][j];
+    //         std::cout << "  Slice " << j << " - Offset: " << slice.offset << ", Size: " << slice.size << " bytes\n";
+    //     }
+    // }
 
     // 第一步的reducescatter输出放在CCL buffer上，通过设置nullptr指示不做最后一步的DMA削减动作
     HcomCollOpInfo reduceScatterOpInfo = {
@@ -191,6 +220,14 @@ HcclResult CollAllReduceRingFor91093Executor::KernelRun(const OpParam &param, Ex
     HCCL_INFO("allreduce double ring stage0 run success.");
 
     bool isSelectAHC = (UseInterServerAHCAlgo(algType_) || UseInterServerAHCBrokeAlgo(algType_));
+
+
+    // 多环数据切分
+    if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) {
+        multRingsSliceZero = PrepareMultiRingSlice(dataSegsSlice, param.tag, false, topoAttr_.nicList);
+    } else {
+        multRingsSliceZero.push_back(dataSegsSlice);
+    }
 
     /* 三步算法step2: 内层 - 节点间 allreduce */
     u64 hdSize;
@@ -374,6 +411,8 @@ HcclResult CollAllReduceRingFor91093Executor::KernelRun(const OpParam &param, Ex
             HCCL_INFO("allreduce double ring [superpod] level1 allgather run success");
         }
     }
+
+
     /* 三步算法step3：外层 - 节点内 allgather */
     // 第三步的allgather输入放在CCL buffer上，通过设置nullptr指示要从CCL buffer获取输入
     HcomCollOpInfo allgatherOpInfo = {
@@ -390,8 +429,27 @@ HcclResult CollAllReduceRingFor91093Executor::KernelRun(const OpParam &param, Ex
         allgatherOpInfoPtr = &allgatherOpInfo;
     }
 
-    std::cout << "hdCount: " << hdCount <<std::endl;
-    std::cout << "execMem.count: " << execMem.count <<std::endl;
+    // std::cout << "hdCount: " << hdCount <<std::endl;
+    // std::cout << "execMem.count: " << execMem.count <<std::endl;
+
+    //  多环数据切分
+    multRingsSliceZero.clear();
+    if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) {
+        // multRingsSliceZero = PrepareMultiRingSlice(dataSegsSlice, param.tag, false, topoAttr_.nicList);
+        // 双环数据相同
+        for (int i = 0; i < 2; ++i) {
+            multRingsSliceZero.push_back(dataSegsSlice);
+        }    
+        // 获取第二个环上的数据
+        std::vector<Slice>& secondVector = multRingsSliceZero[1];
+        // 调整第二个环上的Slice顺序，按照 [0, 7, 6, 5, 4, 3, 2, 1] 的顺序进行调整
+        size_t n = secondVector.size();
+        for (size_t i = 1; i < n / 2; ++i) {
+            std::swap(secondVector[i], secondVector[n - i]);
+        }
+    } else {
+        multRingsSliceZero.push_back(dataSegsSlice);
+    }
 
     CHK_RET(RunIntraSeverAllGather(param.tag, execMem.inputMem, execMem.outputMem, hdCount,
         param.DataDes.dataType, multRingsSliceZero, param.stream,

@@ -470,7 +470,7 @@ HcclResult CollAlignedReduceScatterAsymDoubleRingExecutor::KernelRun(const OpPar
     //         CHK_RET(HcclD2DMemcpyAsync(dispatcher_, execMem.outputMem, srcMem, const_cast<Stream&>(param.stream)));
     //     }
     // }
-    std::cout << "execMem.count: " << execMem.count <<std::endl;
+    // std::cout << "execMem.count: " << execMem.count <<std::endl;
 
     HCCL_INFO("reducescatter double ring run success");
     return HCCL_SUCCESS;
