@@ -339,8 +339,16 @@ HcclResult AlignedAllGatherAsymDoubleRing::PrepareDeviceMems(
         DeviceMem src = outputMem_.range(txSlice.offset, txSlice.size);
         HCCL_DEBUG("tx srcMem[%p] range[%llu] size[%llu] ", src.ptr(),
             txSlice.offset, txSlice.size);
+        
+        // AllReduce打平通信域时，因为ReduceScatter结果在CCL In
+        // 这里强制从CCL In取数据
+        // txMems.emplace_back(TxMemoryInfo{UserMemType::INPUT_MEM, txSlice.offset + baseOffset_,
+        //     src.ptr(), txSlice.size});
+        
+        // 原版从CCL Out取
         txMems.emplace_back(TxMemoryInfo{UserMemType::OUTPUT_MEM, txSlice.offset + baseOffset_,
-            src.ptr(), txSlice.size});
+                src.ptr(), txSlice.size});
+
         DeviceMem dst;
         u32 DMA_REDUCE_ASYM_OFFSET = rankSize / 2 + 1;
         if (step == rankSize - DMA_REDUCE_ASYM_OFFSET) {
@@ -357,8 +365,17 @@ HcclResult AlignedAllGatherAsymDoubleRing::PrepareDeviceMems(
                 step, userRank_, rxSlice.offset, rxSlice.size);
             dst = outputMem_.range(rxSlice.offset, rxSlice.size);
         }
+
+        // AllReduce打平通信域时，因为ReduceScatter结果在CCL In
+        // 这里强制在CCL In收数据
+        // rxMems.emplace_back(RxMemoryInfo{UserMemType::INPUT_MEM, rxSlice.offset + baseOffset_,
+        //     dst.ptr(), rxSlice.size});
+
+        // 原版在CCL Out收
         rxMems.emplace_back(RxMemoryInfo{UserMemType::OUTPUT_MEM, rxSlice.offset + baseOffset_,
             dst.ptr(), rxSlice.size});
+
+
         // PrepareLocalCopyDeviceMems
         // 从流
         src = outputMem_.range(txSlice.offset, txSlice.size);

@@ -103,16 +103,16 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::DoubleRingReduceScatter(c
         multiRingsOrder, multRingsUserMemSlice,
         userMemInputSlicesOfDoubleRing));
 
-    std::cout << "userMemInputSlicesOfDoubleRing size: " << userMemInputSlicesOfDoubleRing.size() << std::endl;
-    std::cout << "userMemInputSlicesOfDoubleRing[0].size(): " << userMemInputSlicesOfDoubleRing[0].size() << std::endl;
-    std::cout << "BaseOffset: " << baseOffset << std::endl;
-    for (size_t i = 0; i < userMemInputSlicesOfDoubleRing.size(); ++i) {
-        std::cout << "Ring " << i << ":\n";
-        for (size_t j = 0; j < userMemInputSlicesOfDoubleRing[i].size(); ++j) {
-            const Slice& slice = userMemInputSlicesOfDoubleRing[i][j];
-            std::cout << "  Slice " << j << " - Offset: " << slice.offset << ", Size: " << slice.size << " bytes\n";
-        }
-    }
+    // std::cout << "userMemInputSlicesOfDoubleRing size: " << userMemInputSlicesOfDoubleRing.size() << std::endl;
+    // std::cout << "userMemInputSlicesOfDoubleRing[0].size(): " << userMemInputSlicesOfDoubleRing[0].size() << std::endl;
+    // std::cout << "BaseOffset: " << baseOffset << std::endl;
+    // for (size_t i = 0; i < userMemInputSlicesOfDoubleRing.size(); ++i) {
+    //     std::cout << "Ring " << i << ":\n";
+    //     for (size_t j = 0; j < userMemInputSlicesOfDoubleRing[i].size(); ++j) {
+    //         const Slice& slice = userMemInputSlicesOfDoubleRing[i][j];
+    //         std::cout << "  Slice " << j << " - Offset: " << slice.offset << ", Size: " << slice.size << " bytes\n";
+    //     }
+    // }
 
     // 生成两个ring上的rankOrder
     std::vector<std::vector<u32>> rankOrders;
@@ -187,8 +187,12 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::DoubleRingAllGather(
         algResResp_->notifiesS2M, rankOrders, userMemOutputSlicesOfDoubleRing));
     CHK_SMART_PTR_NULL(executor);
 
-    ret = executor->Prepare(outputMem, outputMem, inputMem, count, dataType, stream, multRingsSliceZero,
-        HCCL_REDUCE_RESERVED, OUTER_BRIDGE_RANK_ID, baseOffset);
+    // 打平场景下 AllGather需要从CCL In取数据，直接在CCL In操作
+    ret = executor->Prepare(inputMem, inputMem, outputMem, count, dataType, stream, multRingsSliceZero,
+                            HCCL_REDUCE_RESERVED, OUTER_BRIDGE_RANK_ID, baseOffset);
+    // ret = executor->Prepare(outputMem, outputMem, inputMem, count, dataType, stream, multRingsSliceZero,
+    //     HCCL_REDUCE_RESERVED, OUTER_BRIDGE_RANK_ID, baseOffset);
+    
     CHK_PRT_RET(ret != HCCL_SUCCESS,
         HCCL_ERROR("[CollAlignedAllReduceAsymDoubleRingExecutor][DoubleRingAllGather]Double ring "
         "all gather failed, return[%d]", ret), ret);
@@ -566,8 +570,12 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
     //         HCCL_INFO("allreduce double ring [superpod] level1 allgather run success");
     //     }
     // }
+
     /* 三步算法step3：外层 - 节点内 allgather */
     // 第三步的allgather输入放在CCL buffer上，通过设置nullptr指示要从CCL buffer获取输入
+    // 通信域打平不分级时，ReduceScatter的结果在CCL In上，AllGather需要从CCL In读入数据
+
+
     HcomCollOpInfo allgatherOpInfo = {
         "", nullptr, execMem.outputPtr, execMem.count, param.DataDes.dataType, param.root, param.reduceType
     };
@@ -581,16 +589,13 @@ HcclResult CollAlignedAllReduceAsymDoubleRingExecutor::KernelRun(const OpParam &
     if (DMAReduceFlag_) {
         allgatherOpInfoPtr = &allgatherOpInfo;
     }
-    // u64 hdCount = execMem.count / outerCommInfo.localRankSize;
-    // std::cout << "hdCount: " << hdCount << std::endl;
 
-    // 传入的execMem.count参数没有生效
-    // CHK_RET(RunIntraSeverAllGather(param.tag, execMem.inputMem, execMem.outputMem, hdCount,
-    //     param.DataDes.dataType, multRingsSliceZero, param.stream,
-    //     PROF_STAGE_2, 0, allgatherOpInfoPtr));
-    CHK_RET(RunIntraSeverAllGather(param.tag, execMem.inputMem, execMem.outputMem, execMem.count,
+    u64 hdCount = execMem.count/outerCommInfo.localRankSize;
+
+    CHK_RET(RunIntraSeverAllGather(param.tag, execMem.inputMem, execMem.outputMem, hdCount,
         param.DataDes.dataType, multRingsSliceZero, param.stream,
         PROF_STAGE_2, 0, allgatherOpInfoPtr));
+    
     HCCL_INFO("allreduce double ring stage2 run success");
     return HCCL_SUCCESS;
 }
