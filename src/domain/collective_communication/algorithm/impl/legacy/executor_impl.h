@@ -95,6 +95,7 @@
 #include "all_gather_half_ring_pub.h"
 #include "all_gather_half_ring_direct_pub.h"
 #include "aligned_all_gather_asym_double_ring_pub.h"
+#include "aligned_all_gather_asym_all_double_ring_pub.h"
 #include "aligned_reduce_scatter_asym_double_ring_pub.h"
 
 namespace hccl {

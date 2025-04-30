@@ -155,8 +155,8 @@ HcclResult AllGatherOperator::SelectAlgfor91093(const OpParam& param, std::strin
                 HCCL_ERROR("[AllGatherOperator][SelectAlgfor91093]errNo[0x%016llx] tag[%s], AllGather concurrent "\
                     "set inter server ring algo failed", HCCL_ERROR_CODE(ret), param.tag.c_str()), ret);
         }
-        // algName = "AllGatherDoubleRingConcurrentExecutor";
-        algName = "AllGatherDoubleRingAsymExecutor";
+        algName = "AllGatherDoubleRingConcurrentExecutor";
+        // algName = "AllGatherDoubleRingAsymExecutor";
     } else {
         if (GetExternalInputEnableRdmaSdmaConcurrent()) {
             if (!(UseInterServerRingAlgo(algType_) || UseInterServerNBAlgo(algType_))) {
@@ -183,13 +183,26 @@ HcclResult AllGatherOperator::SelectAlgfor91093(const OpParam& param, std::strin
             algName = "AllGatherComm";
         }
     }
-    algName = "AlignedAllGatherAsymDoubleRingExecutor";
-    HCCL_INFO("[SelectAlgfor91093] all_gather SelectAlgfor91093 is algName [%s]", algName.c_str());
+
+    char *pathvar;
+    pathvar = getenv("ALG");
+
+    if(pathvar != NULL){
+        //设置后 打平算法
+        algName = "AlignedAllGatherAsymDoubleRingExecutor";
+    }
+    else
+    {
+        //默认分级算法
+        algName = "AlignedAllGatherAsymNewDoubleRingExecutor";
+    }
+    // algName = "AlignedAllGatherAsymDoubleRingExecutor";
+    // HCCL_INFO("[SelectAlgfor91093] all_gather SelectAlgfor91093 is algName [%s]", algName.c_str());
     // algName = "AllGatherDoubleRingAsymExecutor";
     // algName = "AllGatherDoubleRingConcurrentExecutor";
     // algName = "AlignedAllGatherAsymDoubleRingExecutor";
     // algName = "AlignedAllGatherDoubleRingFor91093Executor";
-    // HCCL_INFO("[SelectAlgfor91093] all_gather SelectAlgfor91093 is algName [%s] finally", algName.c_str());
+    HCCL_INFO("[SelectAlgfor91093] all_gather SelectAlgfor91093 is algName [%s] finally", algName.c_str());
     return HCCL_SUCCESS;
 }
 

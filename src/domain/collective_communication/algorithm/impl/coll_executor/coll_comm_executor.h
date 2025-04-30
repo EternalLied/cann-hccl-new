@@ -114,6 +114,10 @@ public:
         std::vector<std::vector<Slice> >& mutliSegsSlices, u32 ringCount) const;
     void NicSendSizeCal(const std::vector<std::vector<Slice>> &mutliSegsSlices, u32 ringCount, u32 chunkSize,
         const std::vector<u32> &nicList, const std::string &tag);
+
+    std::vector<std::vector<Slice> > PrepareMultiRingSliceRS(const std::vector<Slice> &dataSegsSlice,
+        const std::string &tag, bool avoidCceRewrite = false, std::vector<u32> nicList = {0, 1, 2, 3, 4, 5, 6, 7});
+        
     std::vector<std::vector<Slice> > PrepareMultiRingSlice(const std::vector<Slice> &dataSegsSlice,
         const std::string &tag, bool avoidCceRewrite = false, std::vector<u32> nicList = {0, 1, 2, 3, 4, 5, 6, 7});
     

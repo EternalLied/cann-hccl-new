@@ -434,6 +434,10 @@ HcclResult CollAllReduceRingFor91093Executor::KernelRun(const OpParam &param, Ex
 
     //  多环数据切分
     multRingsSliceZero.clear();
+
+    // 根据数据量计算每个环上数据的偏移和大小
+    CHK_RET(ExecutorBase::PrepareSliceData(execMem.count, perDataSize, sliceNum, 0, dataSegsSlice));
+
     if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) {
         // multRingsSliceZero = PrepareMultiRingSlice(dataSegsSlice, param.tag, false, topoAttr_.nicList);
         // 双环数据相同

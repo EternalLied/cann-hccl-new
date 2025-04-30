@@ -1790,6 +1790,87 @@ void CollCommExecutor::NicSendSizeCal(const std::vector<std::vector<Slice>> &mut
     SetNicSendSize(tag, sizeList);
 }
 
+std::vector<std::vector<Slice> > CollCommExecutor::PrepareMultiRingSliceRS(const std::vector<Slice> &dataSegsSlice,
+    const std::string &tag, bool avoidCceRewrite, std::vector<u32> nicList)
+{
+    // get ranksSize
+    u32 ranksSize = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0).localRankSize;
+    // 获取每个ring上设备的排布顺序，顺序均为deviceID
+    sort(nicList.begin(), nicList.end());
+    std::vector<std::vector<u32> > multiRingsOrder = GetRingsOrderByTopoType(ranksSize, topoType_, nicList);
+    std::vector<std::vector<Slice> > mutliRingsSlices;
+    std::vector<std::vector<Slice> > mutliSegsSlices;
+    u32 ringCount = multiRingsOrder.size();
+    // 单环场景不应该走入此流程，需要在函数外校验
+    CHK_PRT_RET(ringCount <= 1, HCCL_ERROR("[CollCommExecutor][PrepareMultiRingSlice] ringCount[%u] <= 1",
+        ringCount), mutliRingsSlices);
+
+    u32 ringRanks = multiRingsOrder[0].size(); // 获取单个 ring 上设备的数量
+
+    // 将数每块据切分为 ringCount 份
+    HcclResult ret;
+    mutliSegsSlices.reserve(dataSegsSlice.size());
+
+    // ===============================================
+    // if (avoidCceRewrite) {
+    //     ret = MutliSegSlicePrepareAvoidCceRewrite(dataSegsSlice, mutliSegsSlices, ringCount);
+    // } else {
+    //     ret = MutliSegSlicePrepare(dataSegsSlice, mutliSegsSlices, ringCount);
+    // }
+    // if (ret != HCCL_SUCCESS) {
+    //     return mutliRingsSlices;
+    // }
+    // ===============================================
+
+    for (u32 sliceIdx = 0; sliceIdx < dataSegsSlice.size(); sliceIdx++){
+        std::vector<Slice> singleSegSlices;
+        for (u32 i = 0; i < 2; i++){
+            singleSegSlices.emplace_back(dataSegsSlice[sliceIdx]);
+        }
+        multiSegsSlices.emplace_back(singleSegSlices);
+    }
+
+
+    // ===============================================
+    u32 chunkSize = ringRanks / nicList.size();
+    (void) NicSendSizeCal(mutliSegsSlices, ringCount, chunkSize, nicList, tag);
+    std::vector<std::vector<u32>> ringRankList;
+    std::vector<Slice> singleRingSlices;
+    std::vector<u32> rankList;
+
+    ringRankList.reserve(ringCount);
+    singleRingSlices.reserve(ringRanks);
+    rankList.reserve(ringRanks);
+
+    for (u32 ringIndex = 0; ringIndex < ringCount; ringIndex++) {
+        for (u32 segsIndex = 0; segsIndex < ringRanks; segsIndex++) {
+            u32 deviceIdx = multiRingsOrder[ringIndex][segsIndex];
+            std::vector<u32>::iterator iterRank = std::find(nicList.begin(), nicList.end(), deviceIdx);
+            if (iterRank != nicList.end()) {
+                rankList.push_back(segsIndex);
+                u32 nicPosition = distance(nicList.begin(), iterRank);
+                for (u32 chunkIdx = 0; chunkIdx < chunkSize; chunkIdx++) {
+                    Slice tempSlice = mutliSegsSlices[nicPosition * chunkSize + chunkIdx][ringIndex];
+                    singleRingSlices.push_back(tempSlice);
+                }
+            }
+        }
+        mutliRingsSlices.push_back(singleRingSlices);
+        ringRankList.push_back(rankList);
+        singleRingSlices.clear();
+        rankList.clear();
+    }
+
+    ret = SetRingNics(tag, ringRankList);
+    if (ret != HCCL_SUCCESS) {
+        HCCL_ERROR("[Prepare][MultiRingSlice]set nics in ring failed, ret[%u]", ret);
+        std::vector<std::vector<Slice> > emptySlice;
+        return emptySlice;
+    }
+    return mutliRingsSlices;
+}
+
+
 std::vector<std::vector<Slice> > CollCommExecutor::PrepareMultiRingSlice(const std::vector<Slice> &dataSegsSlice,
     const std::string &tag, bool avoidCceRewrite, std::vector<u32> nicList)
 {

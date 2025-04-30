@@ -87,7 +87,7 @@ target_compile_options(hccl_alg PRIVATE
     -O3
     -std=c++14
     -fstack-protector-all
-    -g
+    # -g
 )
 
 target_link_options(hccl_alg PRIVATE

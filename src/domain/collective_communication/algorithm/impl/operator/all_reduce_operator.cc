@@ -469,8 +469,8 @@ HcclResult AllReduceOperator::SelectAlgfor91093(const OpParam& param, std::strin
                 algName = "AllReduceFastDoubleRingFor91093Executor";
             } else {
                 // algName = "AlignedAllReduceDoubleRingFor91093Executor";
-                // algName = "AlignedAllReduceAsymDoubleRingExecutor";
-                algName = "AlignedAllReduceAsymNewDoubleRingExecutor";
+                algName = "AlignedAllReduceAsymDoubleRingExecutor";
+                // algName = "AlignedAllReduceAsymNewDoubleRingExecutor";
             }
         } else if (topoType_ == TopoType::TOPO_TYPE_NP_SINGLE_RING) {
             algName = "AllReduceRingFor91093Executor";
@@ -478,7 +478,20 @@ HcclResult AllReduceOperator::SelectAlgfor91093(const OpParam& param, std::strin
             algName = "AllReduceComm"; // 支持91093全通信域
         }
     }
-    algName = "AlignedAllReduceAsymNewDoubleRingExecutor";
+
+    char *pathvar;
+    pathvar = getenv("ALG");
+
+    if(pathvar != NULL){
+        //设置后 打平算法
+        algName = "AlignedAllReduceAsymDoubleRingExecutor";
+    }
+    else
+    {
+        //默认分级算法
+        algName = "AlignedAllReduceAsymNewDoubleRingExecutor";
+    }
+    // algName = "AlignedAllReduceAsymNewDoubleRingExecutor";
     // algName = "AlignedAllReduceAsymDoubleRingExecutor";
     // algName = "AlignedAllReduceDoubleRingFor91093Executor";
     HCCL_INFO("[SelectAlgfor91093] all_reduce SelectAlgfor91093 is algName [%s].", algName.c_str());

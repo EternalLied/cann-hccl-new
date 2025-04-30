@@ -260,20 +260,20 @@ std::vector<std::vector<Slice>> CollReduceScatterExecutor::ReduceScatterRingSlic
     // 再将每个 slice 划分为 ringNum 份
     if (ringNum == OUTER_PLANE_NUM_IN_8PRING) {
         if (useInlineReduce) {
-            multiStreamSlice = PrepareMultiRingSlice(dataSegsSlice, tag);
+            multiStreamSlice = PrepareMultiRingSliceRS(dataSegsSlice, tag);
         } else if (outputMem.size() % CCE_REDUCE_ALIGN_SIZE == 0) {
-            multiStreamSlice = PrepareMultiRingSlice(dataSegsSlice, tag);
+            multiStreamSlice = PrepareMultiRingSliceRS(dataSegsSlice, tag);
         } else {
-            multiStreamSlice = PrepareMultiRingSlice(dataSegsSlice, tag, true);
+            multiStreamSlice = PrepareMultiRingSliceRS(dataSegsSlice, tag, true);
         }
     } else if (ringNum == OUTER_PLANE_NUM_IN_NPRING_DOUBLE) {
         // 双环场景，需要传入正确的 niclist (不涉及网口裁剪)
         if (useInlineReduce) {
-            multiStreamSlice = PrepareMultiRingSlice(dataSegsSlice, tag, false, topoAttr_.nicList);
+            multiStreamSlice = PrepareMultiRingSliceRS(dataSegsSlice, tag, false, topoAttr_.nicList);
         } else if (outputMem.size() % CCE_REDUCE_ALIGN_SIZE == 0) {
-            multiStreamSlice = PrepareMultiRingSlice(dataSegsSlice, tag, false, topoAttr_.nicList);
+            multiStreamSlice = PrepareMultiRingSliceRS(dataSegsSlice, tag, false, topoAttr_.nicList);
         } else {
-            multiStreamSlice = PrepareMultiRingSlice(dataSegsSlice, tag, true, topoAttr_.nicList);
+            multiStreamSlice = PrepareMultiRingSliceRS(dataSegsSlice, tag, true, topoAttr_.nicList);
         }
     } else {
         multiStreamSlice.push_back(dataSegsSlice);
