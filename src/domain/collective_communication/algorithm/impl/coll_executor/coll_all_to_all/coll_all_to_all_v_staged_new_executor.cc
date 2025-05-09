@@ -9,16 +9,16 @@
  */
 
 
-#include "coll_all_to_all_v_staged_executor.h"
+#include "coll_all_to_all_v_staged_new_executor.h"
 namespace hccl {
 
-CollRunAlltoAllVStaged::CollRunAlltoAllVStaged(const HcclDispatcher dispatcher,
+CollRunAlltoAllVStagedNew::CollRunAlltoAllVStagedNew(const HcclDispatcher dispatcher,
                                                std::unique_ptr<TopoMatcher> &topoMatcher)
     : CollAlltoAllExecutor(dispatcher, topoMatcher)
 {
 }
 
-HcclResult CollRunAlltoAllVStaged::ParallelTaskLoaderProcess(const std::string &tag, Stream &stream,
+HcclResult CollRunAlltoAllVStagedNew::ParallelTaskLoaderProcess(const std::string &tag, Stream &stream,
     SubCommInfo &outerCommInfo, std::vector<Stream> &ringStreams)
 {
     u32 streamIndex;
@@ -46,7 +46,7 @@ HcclResult CollRunAlltoAllVStaged::ParallelTaskLoaderProcess(const std::string &
     return HCCL_SUCCESS;
 }
 
-HcclResult CollRunAlltoAllVStaged::CalcStreamNum(u32& streamNum)
+HcclResult CollRunAlltoAllVStagedNew::CalcStreamNum(u32& streamNum)
 {
     streamNum = 0U;
 
@@ -66,11 +66,11 @@ HcclResult CollRunAlltoAllVStaged::CalcStreamNum(u32& streamNum)
     //     }
     // }
 
-    HCCL_INFO("[CollRunAlltoAllVStaged][CalcStreamNum] tag[%s] streamNum[%u]", tag_.c_str(), streamNum);
+    HCCL_INFO("[CollRunAlltoAllVStagedNew][CalcStreamNum] tag[%s] streamNum[%u]", tag_.c_str(), streamNum);
     return HCCL_SUCCESS;
 }
 
-void CollRunAlltoAllVStaged::CalcWorkSpaceMemSize(const AlltoAllUserRankInfo &userRankInfo,
+void CollRunAlltoAllVStagedNew::CalcWorkSpaceMemSize(const AlltoAllUserRankInfo &userRankInfo,
     const std::vector<SendRecvInfo> &allMeshAggregationSendRecvInfo, u64 &workspaceMemSize,
     u32 meshAggregationRankSize)
 {
@@ -92,7 +92,7 @@ void CollRunAlltoAllVStaged::CalcWorkSpaceMemSize(const AlltoAllUserRankInfo &us
     HCCL_INFO("[AlltoAllVStagedCalculator][CalcWorkSpaceMemSize] workspaceMemSize[%llu]", workspaceMemSize);
 }
 
-HcclResult CollRunAlltoAllVStaged::CalcScratchMemSize(u64& scratchMemSize)
+HcclResult CollRunAlltoAllVStagedNew::CalcScratchMemSize(u64& scratchMemSize)
 {
     scratchMemSize = 0U;
     u64 maxWorkSpaceMemSize = 0;
@@ -117,11 +117,11 @@ HcclResult CollRunAlltoAllVStaged::CalcScratchMemSize(u64& scratchMemSize)
         scratchMemSize = CalAlltoAllVScratchMemSize(maxWorkSpaceMemSize);
     }
 
-    HCCL_INFO("[CollRunAlltoAllVStaged][CalcScratchMemSize] scratchMemSize[%llu]", scratchMemSize);
+    HCCL_INFO("[CollRunAlltoAllVStagedNew][CalcScratchMemSize] scratchMemSize[%llu]", scratchMemSize);
     return HCCL_SUCCESS;
 }
 
-HcclResult CollRunAlltoAllVStaged::CheckNeedRecreateComm(u64 lastScratchMemSize, bool& needRecreateAlltoallComm)
+HcclResult CollRunAlltoAllVStagedNew::CheckNeedRecreateComm(u64 lastScratchMemSize, bool& needRecreateAlltoallComm)
 {
     u64 tmpScratchMemSize = 0;
     CHK_RET(CalcScratchMemSize(tmpScratchMemSize));
@@ -129,11 +129,11 @@ HcclResult CollRunAlltoAllVStaged::CheckNeedRecreateComm(u64 lastScratchMemSize,
     return HCCL_SUCCESS;
 }
 
-HcclResult CollRunAlltoAllVStaged::CheckNeedCreateVirtualLinks(AlgResourceRequest &resourceRequest)
+HcclResult CollRunAlltoAllVStagedNew::CheckNeedCreateVirtualLinks(AlgResourceRequest &resourceRequest)
 {
     bool alltoallMeshReadOnly = FullmeshPairwiseSatisfyHighPerfAlltoallMeshCondition(topoAttr_.deviceType,
         topoAttr_.userRankSize, topoAttr_.useSuperPodMode);
-    HCCL_DEBUG("[CollRunAlltoAllVStaged][CheckNeedCreateVirtualLinks] alltoallMeshReadOnly[%d]," \
+    HCCL_DEBUG("[CollRunAlltoAllVStagedNew][CheckNeedCreateVirtualLinks] alltoallMeshReadOnly[%d]," \
         "resourceRequest.streamNum[%u], GetExternalInputHcclEnableFfts()[%d], isAlltoAllZCopyMode_[%d]",
         alltoallMeshReadOnly, resourceRequest.streamNum, GetExternalInputHcclEnableFfts(), isAlltoAllZCopyMode_);
     if (!alltoallMeshReadOnly && (resourceRequest.streamNum != 0) && (!GetExternalInputHcclEnableFfts())
@@ -141,14 +141,14 @@ HcclResult CollRunAlltoAllVStaged::CheckNeedCreateVirtualLinks(AlgResourceReques
         for (auto &levelNSubCommTransport : resourceRequest.opTransport) {
             for (auto &singleSubCommTransport : levelNSubCommTransport) {
                 singleSubCommTransport.needVirtualLink = true;
-                HCCL_INFO("[CollRunAlltoAllVStaged][CheckNeedCreateVirtualLinks] needVirtualLink is true");
+                HCCL_INFO("[CollRunAlltoAllVStagedNew][CheckNeedCreateVirtualLinks] needVirtualLink is true");
             }
         }
     }
     return HCCL_SUCCESS;
 }
 
-HcclResult CollRunAlltoAllVStaged::CalcLevel0CommInfo(TransportMemType inputType, TransportMemType outputType,
+HcclResult CollRunAlltoAllVStagedNew::CalcLevel0CommInfo(TransportMemType inputType, TransportMemType outputType,
     std::vector<LevelNSubCommTransport>& opTransport)
 {
     CommParaInfo commParaLevel0(COMM_MESH_L0, CommType::COMM_TAG_MESH);
@@ -156,7 +156,7 @@ HcclResult CollRunAlltoAllVStaged::CalcLevel0CommInfo(TransportMemType inputType
     return HCCL_SUCCESS;
 }
 
-HcclResult CollRunAlltoAllVStaged::CalcLevel1CommInfo(TransportMemType inputType,
+HcclResult CollRunAlltoAllVStagedNew::CalcLevel1CommInfo(TransportMemType inputType,
     TransportMemType outputType, std::vector<LevelNSubCommTransport>& opTransport)
 {
     CommParaInfo commParaInfo(COMM_MESH_L1, CommType::COMM_TAG_MESH);
@@ -164,7 +164,7 @@ HcclResult CollRunAlltoAllVStaged::CalcLevel1CommInfo(TransportMemType inputType
     return HCCL_SUCCESS;
 }
 
-HcclResult CollRunAlltoAllVStaged::CalcLevel2CommInfo(TransportMemType inputType,
+HcclResult CollRunAlltoAllVStagedNew::CalcLevel2CommInfo(TransportMemType inputType,
     TransportMemType outputType,
     std::vector<LevelNSubCommTransport>& opTransport)
 {
@@ -173,7 +173,7 @@ HcclResult CollRunAlltoAllVStaged::CalcLevel2CommInfo(TransportMemType inputType
     return HCCL_SUCCESS;
 }
 
-HcclResult CollRunAlltoAllVStaged::CalStagedAlltoallVCommInfo(TransportMemType inputType,
+HcclResult CollRunAlltoAllVStagedNew::CalStagedAlltoallVCommInfo(TransportMemType inputType,
     TransportMemType outputType,
     std::vector<LevelNSubCommTransport>& opTransport)
 {
@@ -204,11 +204,11 @@ HcclResult CollRunAlltoAllVStaged::CalStagedAlltoallVCommInfo(TransportMemType i
         CHK_RET(CalcLevel1CommInfo(TransportMemType::SCRATCH, TransportMemType::PARAM_OUTPUT, opTransport));
         CHK_RET(CalcLevel2CommInfo(TransportMemType::PARAM_INPUT, TransportMemType::PARAM_OUTPUT, opTransport));
     }
-    HCCL_DEBUG("[CollRunAlltoAllVStaged][CalStagedAlltoallVCommInfo] ends");
+    HCCL_DEBUG("[CollRunAlltoAllVStagedNew][CalStagedAlltoallVCommInfo] ends");
     return HCCL_SUCCESS;
 }
 
-HcclResult CollRunAlltoAllVStaged::CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport)
+HcclResult CollRunAlltoAllVStagedNew::CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport)
 {
     TransportMemType inputType = TransportMemType::RESERVED;
     TransportMemType outputType = TransportMemType::RESERVED;
@@ -217,7 +217,7 @@ HcclResult CollRunAlltoAllVStaged::CalcCommInfo(std::vector<LevelNSubCommTranspo
     return HCCL_SUCCESS;
 }
 
-HcclResult CollRunAlltoAllVStaged::PrepareAlltoAllVStaged1(DeviceMem &sendBuf, DeviceMem &recvBuf, DeviceMem &scratchMem,
+HcclResult CollRunAlltoAllVStagedNew::PrepareAlltoAllVStaged1(DeviceMem &sendBuf, DeviceMem &recvBuf, DeviceMem &scratchMem,
     std::map<u32, std::list<OneSendRecvAddrInfo>> &sendAddrInfosIntra,
     std::map<u32, std::list<OneSendRecvAddrInfo>> &recvAddrInfosIntra,
     Stream &stream, const std::string &tag, std::unique_ptr<AlltoAllVStagedBase> &alltoallOuter,
@@ -250,31 +250,30 @@ HcclResult CollRunAlltoAllVStaged::PrepareAlltoAllVStaged1(DeviceMem &sendBuf, D
             CHK_SMART_PTR_NULL(alltoallOuter);
             CHK_RET(alltoallOuter->Prepare(inBuf, outBuf, sendAddrInfosIntra, recvAddrInfosIntra,
                 isAlltoAllZCopyMode_));
-        } 
-        // else {
-        //     HCCL_INFO("Running alltoallv Staged Mesh intra Server");
-        //     if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OPS_KERNEL_INFO_LIB) {
-        //         CHK_RET(ActiveSlaveStreams(AlltoAllVParam_.stream));
-        //     }
-        //     // 添加从流profiling, 用于维护planID
-        //     CHK_RET(AddSubStreamToProfiling());
+        } else {
+            HCCL_INFO("Running alltoallv Staged Mesh intra Server");
+            if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OPS_KERNEL_INFO_LIB) {
+                CHK_RET(ActiveSlaveStreams(AlltoAllVParam_.stream));
+            }
+            // 添加从流profiling, 用于维护planID
+            CHK_RET(AddSubStreamToProfiling());
 
-        //     if (GetExternalInputHcclEnableFfts() || algResResp_->slaveStreams.size() == 0) {
-        //         alltoallOuter.reset(new (std::nothrow) AlltoAllVStagedMesh(dispatcher_, stream,
-        //             algResResp_->notifiesM2S, algResResp_->notifiesS2M, topoAttr_.userRank, algResResp_->slaveStreams));
-        //     } else {
-        //         alltoallOuter.reset(new (std::nothrow) AlltoAllVStagedMesh(vDispatcher_, stream,
-        //             algResResp_->notifiesM2S, algResResp_->notifiesS2M, topoAttr_.userRank, algResResp_->slaveStreams));
-        //     }
-        //     CHK_SMART_PTR_NULL(alltoallOuter);
-        //     CHK_RET(alltoallOuter->Prepare(inBuf, outBuf, sendAddrInfosIntra, recvAddrInfosIntra, isAlltoAllZCopyMode_,
-        //         algResResp_->slaveStreams));
-        // }
+            if (GetExternalInputHcclEnableFfts() || algResResp_->slaveStreams.size() == 0) {
+                alltoallOuter.reset(new (std::nothrow) AlltoAllVStagedMesh(dispatcher_, stream,
+                    algResResp_->notifiesM2S, algResResp_->notifiesS2M, topoAttr_.userRank, algResResp_->slaveStreams));
+            } else {
+                alltoallOuter.reset(new (std::nothrow) AlltoAllVStagedMesh(vDispatcher_, stream,
+                    algResResp_->notifiesM2S, algResResp_->notifiesS2M, topoAttr_.userRank, algResResp_->slaveStreams));
+            }
+            CHK_SMART_PTR_NULL(alltoallOuter);
+            CHK_RET(alltoallOuter->Prepare(inBuf, outBuf, sendAddrInfosIntra, recvAddrInfosIntra, isAlltoAllZCopyMode_,
+                algResResp_->slaveStreams));
+        }
     }
     return HCCL_SUCCESS;
 }
 
-void CollRunAlltoAllVStaged::CalcInterMeshAggregationRecvRemoteOffset(const AlltoAllUserRankInfo &userRankInfo,
+void CollRunAlltoAllVStagedNew::CalcInterMeshAggregationRecvRemoteOffset(const AlltoAllUserRankInfo &userRankInfo,
     const std::vector<SendRecvInfo> &allSendRecvInfo, u32 index, u64 &remoteOffset, u32 meshAggregationRankSize)
 {
     // 对于stage1 来说，相当于是从rand index 发送给 userRankInfo.userRank, 然后计算这种情况下的stage1 的接收偏移
@@ -298,7 +297,7 @@ void CollRunAlltoAllVStaged::CalcInterMeshAggregationRecvRemoteOffset(const Allt
     }
 }
 
-void CollRunAlltoAllVStaged::CalcInterMeshAggregationAlltoAllMemInfo(
+void CollRunAlltoAllVStagedNew::CalcInterMeshAggregationAlltoAllMemInfo(
     const AlltoAllUserRankInfo &userRankInfo, const std::vector<SendRecvInfo> &allSendRecvInfo,
     std::map<u32, std::list<OneSendRecvAddrInfo>> &sendAddrInfosInter,
     std::map<u32, std::list<OneSendRecvAddrInfo>> &recvAddrInfosInter,
@@ -352,7 +351,7 @@ void CollRunAlltoAllVStaged::CalcInterMeshAggregationAlltoAllMemInfo(
     }
 }
 
-HcclResult CollRunAlltoAllVStaged::PrepareAlltoAllVStaged2(DeviceMem &recvBuf, DeviceMem &scratchMem,
+HcclResult CollRunAlltoAllVStagedNew::PrepareAlltoAllVStaged2(DeviceMem &recvBuf, DeviceMem &scratchMem,
     std::map<u32, std::list<OneSendRecvAddrInfo>> &sendAddrInfosInter,
     std::map<u32, std::list<OneSendRecvAddrInfo>> &recvAddrInfosInter,
     Stream &stream, const std::string &tag, std::unique_ptr<AlltoAllVStagedBase> &alltoallInner,
@@ -375,9 +374,9 @@ HcclResult CollRunAlltoAllVStaged::PrepareAlltoAllVStaged2(DeviceMem &recvBuf, D
     return HCCL_SUCCESS;
 }
 
-HcclResult CollRunAlltoAllVStaged::KernelRun(const OpParam &param, ExecMem &execMem)
+HcclResult CollRunAlltoAllVStagedNew::KernelRun(const OpParam &param, ExecMem &execMem)
 {
-    HCCL_INFO("[CollRunAlltoAllVStaged][KernelRun] alltoall staged starts");
+    HCCL_INFO("[CollRunAlltoAllVStagedNew][KernelRun] alltoall staged starts");
     CHK_PRT_RET(topoAttr_.userRankSize % topoAttr_.meshAggregationRankSize != 0,
         HCCL_ERROR("userRankSize[%u] is not an Integer multiple of MeshAggregation Dev Num[%u]",
         topoAttr_.userRankSize, topoAttr_.meshAggregationRankSize), HCCL_E_PARA);
@@ -399,7 +398,7 @@ HcclResult CollRunAlltoAllVStaged::KernelRun(const OpParam &param, ExecMem &exec
     SubCommInfo outerCommInfo = GetSubCommInfo(COMM_MESH_L0, COMM_INDEX_0);
 
     if (alltoallMeshReadOnly) {
-        HCCL_INFO("[AlltoAllOperator][RunAlltoAllVStaged] staged 1 read only algo");
+        HCCL_INFO("[AlltoAllOperator][RunAlltoAllVStagedNew] staged 1 read only algo");
         if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OPS_KERNEL_INFO_LIB) {
             CHK_RET(ActiveSlaveStreams(param.stream));
         }
@@ -434,7 +433,7 @@ HcclResult CollRunAlltoAllVStaged::KernelRun(const OpParam &param, ExecMem &exec
             sendAddrInfosIntra, recvAddrInfosIntra, const_cast<Stream&>(param.stream), tag_, alltoallOuter, execMem));
         if ((algResResp_->slaveStreams.size() != 0) &&
             (!GetExternalInputHcclEnableFfts()) && isAlltoAllZCopyMode_) {
-            HCCL_INFO("[AlltoAllOperator][RunAlltoAllVStaged] staged 0 use parallel multi-thread delivery of tasks");
+            HCCL_INFO("[AlltoAllOperator][RunAlltoAllVStagedNew] staged 0 use parallel multi-thread delivery of tasks");
             CHK_RET(RunTemplateWithVirtualLink(alltoallOuter, outerCommInfo));
             // 多流场景下，并行多线程下发task处理
             CHK_RET(ParallelTaskLoaderProcess(tag_, const_cast<Stream&>(param.stream), outerCommInfo,
@@ -443,7 +442,7 @@ HcclResult CollRunAlltoAllVStaged::KernelRun(const OpParam &param, ExecMem &exec
             CHK_RET(RunAlltoAllVTemplateStaged(alltoallOuter, outerCommInfo));
         }
 
-        HCCL_INFO("[hcclImpl][RunAlltoAllVStaged] stage0 run success!");
+        HCCL_INFO("[hcclImpl][RunAlltoAllVStagedNew] stage0 run success!");
     }
     std::map<u32, std::list<OneSendRecvAddrInfo>> sendAddrInfosInter;
     std::map<u32, std::list<OneSendRecvAddrInfo>> recvAddrInfosInter;
@@ -455,7 +454,7 @@ HcclResult CollRunAlltoAllVStaged::KernelRun(const OpParam &param, ExecMem &exec
         HCCL_DEBUG("we don't need to do stage 2 when there is only one mesh aggregation");
         // we don't need to do stage 2 when there is only one mesh aggregation
     } else {
-        HCCL_INFO("[hcclImpl][RunAlltoAllVStaged] stage1 run starts!");
+        HCCL_INFO("[hcclImpl][RunAlltoAllVStagedNew] stage1 run starts!");
         CHK_RET(CheckCommSize(COMM_MESH_L1, COMM_INDEX_0 + 1));
         SubCommInfo innerCommInfo = GetSubCommInfo(COMM_MESH_L1, COMM_INDEX_0);
         std::unique_ptr<AlltoAllVStagedBase> alltoallInner = nullptr;
@@ -470,9 +469,9 @@ HcclResult CollRunAlltoAllVStaged::KernelRun(const OpParam &param, ExecMem &exec
         CHK_RET(HcclD2DMemcpyAsync(dispatcher_, algResResp_->paramOutputMem, srcMem, const_cast<Stream&>(param.stream)));
     }
 
-    HCCL_INFO("[CollRunAlltoAllVStaged][kernelRun] alltoall staged ends");
+    HCCL_INFO("[CollRunAlltoAllVStagedNew][kernelRun] alltoall staged ends");
     return HCCL_SUCCESS;
 }
 
-REGISTER_EXEC("RunAlltoAllVStaged", AlltoAllVStaged, CollRunAlltoAllVStaged);
+REGISTER_EXEC("RunAlltoAllVStagedNew", AlltoAllVStaged, CollRunAlltoAllVStagedNew);
 } // namespace hccl

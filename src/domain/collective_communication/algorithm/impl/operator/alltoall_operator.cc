@@ -229,11 +229,34 @@ HcclResult AlltoAllOperator::SelectAlgforAlltoAll(const OpParam& param, std::str
         useOneLevelAlgorithm || isAllRankSamePlane_ || isSingleDeviceModuleP2p || multiModuleDiffDeviceNumMode_ ||
         multiSuperPodDiffServerNumMode_) {
             
-        algName = "RunAlltoAllVStaged";
+        char *pathvar;
+        pathvar = getenv("ALG");
+
+        if(pathvar != NULL){
+            //设置后改进算法
+            algName = "RunAlltoAllVStagedNew";
+        }
+        else
+        {
+            //默认基线算法
+            algName = "RunAlltoAllVStaged";
+        }
         
         // algName = "RunAlltoAllVFullMesh";   //910B卡数不一致走这
     } else {
-        algName = "RunAlltoAllVStaged";
+        
+        char *pathvar;
+        pathvar = getenv("ALG");
+
+        if(pathvar != NULL){
+            //设置后改进算法
+            algName = "RunAlltoAllVStagedNew";
+        }
+        else
+        {
+            //默认基线算法
+            algName = "RunAlltoAllVStaged";
+        }
     }
 
     if (param.opType == HcclCMDType::HCCL_CMD_ALLTOALLV) {
